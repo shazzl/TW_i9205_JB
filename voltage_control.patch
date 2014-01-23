@@ -1,0 +1,212 @@
+From 7dfa94db18ab33259a36d629e5a45d57a0662feb Mon Sep 17 00:00:00 2001
+From: zeroblade1984 <zeroblade1984@gmail.com>
+Date: Mon, 13 Jan 2014 13:03:02 +0800
+Subject: [PATCH] mach-msm:Add Userspace Voltage control c/o @faux123
+
+---
+ arch/arm/mach-msm/Kconfig           |  6 +++
+ arch/arm/mach-msm/acpuclock-krait.c | 48 +++++++++++++++++++++
+ drivers/cpufreq/cpufreq.c           | 83 +++++++++++++++++++++++++++++++++++++
+ 3 files changed, 137 insertions(+)
+
+diff --git a/arch/arm/mach-msm/Kconfig b/arch/arm/mach-msm/Kconfig
+index e30adb5..4ad374c 100644
+--- a/arch/arm/mach-msm/Kconfig
++++ b/arch/arm/mach-msm/Kconfig
+@@ -1747,6 +1747,12 @@ config MSM_CPU_FREQ_MIN
+ 
+ endif # CPU_FREQ_MSM
+ 
++config USERSPACE_VOLTAGE_CONTROL
++	bool "Enable Userspace CPU Voltage Control"
++	default y
++	help
++	  Userspace Voltage Control
++
+ config MSM_CPU_AVS
+ 	bool "Enable software controlled Adaptive Voltage Scaling (AVS)"
+ 	depends on (ARCH_MSM_SCORPION && QSD_SVS)
+diff --git a/arch/arm/mach-msm/acpuclock-krait.c b/arch/arm/mach-msm/acpuclock-krait.c
+index bc8e4aa..5cbc110 100644
+--- a/arch/arm/mach-msm/acpuclock-krait.c
++++ b/arch/arm/mach-msm/acpuclock-krait.c
+@@ -885,6 +885,54 @@ static void __init bus_init(const struct l2_level *l2_level)
+ 		dev_err(drv.dev, "initial bandwidth req failed (%d)\n", ret);
+ }
+ 
++#ifdef CONFIG_USERSPACE_VOLTAGE_CONTROL
++
++#define HFPLL_MIN_VDD		 700000
++#define HFPLL_MAX_VDD		1350000
++
++ssize_t acpuclk_get_vdd_levels_str(char *buf) {
++
++	int i, len = 0;
++
++	if (buf) {
++		mutex_lock(&driver_lock);
++
++		for (i = 0; drv.acpu_freq_tbl[i].speed.khz; i++) {
++			/* updated to use uv required by 8x60 architecture - faux123 */
++			len += sprintf(buf + len, "%8lu: %8d\n", drv.acpu_freq_tbl[i].speed.khz,
++				drv.acpu_freq_tbl[i].vdd_core );
++		}
++
++		mutex_unlock(&driver_lock);
++	}
++	return len;
++}
++
++/* updated to use uv required by 8x60 architecture - faux123 */
++void acpuclk_set_vdd(unsigned int khz, int vdd_uv) {
++
++	int i;
++	unsigned int new_vdd_uv;
++
++	mutex_lock(&driver_lock);
++
++	for (i = 0; drv.acpu_freq_tbl[i].speed.khz; i++) {
++		if (khz == 0)
++			new_vdd_uv = min(max((unsigned int)(drv.acpu_freq_tbl[i].vdd_core + vdd_uv),
++				(unsigned int)HFPLL_MIN_VDD), (unsigned int)HFPLL_MAX_VDD);
++		else if ( drv.acpu_freq_tbl[i].speed.khz == khz)
++			new_vdd_uv = min(max((unsigned int)vdd_uv,
++				(unsigned int)HFPLL_MIN_VDD), (unsigned int)HFPLL_MAX_VDD);
++		else 
++			continue;
++
++		drv.acpu_freq_tbl[i].vdd_core = new_vdd_uv;
++	}
++	pr_warn("User Voltage table modified!\n");
++	mutex_unlock(&driver_lock);
++}
++#endif	/* CONFIG_CPU_VOTALGE_TABLE */
++
+ #ifdef CONFIG_CPU_FREQ_MSM
+ static struct cpufreq_frequency_table freq_table[NR_CPUS][35];
+ 
+diff --git a/drivers/cpufreq/cpufreq.c b/drivers/cpufreq/cpufreq.c
+index e2b9bb5..a653304 100644
+--- a/drivers/cpufreq/cpufreq.c
++++ b/drivers/cpufreq/cpufreq.c
+@@ -520,6 +520,68 @@ static ssize_t show_bios_limit(struct cpufreq_policy *policy, char *buf)
+ 	return sprintf(buf, "%u\n", policy->cpuinfo.max_freq);
+ }
+ 
++#ifdef CONFIG_USERSPACE_VOLTAGE_CONTROL
++
++extern ssize_t acpuclk_get_vdd_levels_str(char *buf);
++extern void acpuclk_set_vdd(unsigned acpu_khz, int vdd);
++
++static ssize_t show_vdd_levels(struct kobject *a, struct attribute *b, char *buf) {
++	return acpuclk_get_vdd_levels_str(buf);
++}
++
++static ssize_t store_vdd_levels(struct kobject *a, struct attribute *b, const char *buf, size_t count) {
++
++	int i = 0, j;
++	int pair[2] = { 0, 0 };
++	int sign = 0;
++
++	if (count < 1)
++		return 0;
++
++	if (buf[0] == '-') {
++		sign = -1;
++		i++;
++	}
++	else if (buf[0] == '+') {
++		sign = 1;
++		i++;
++	}
++
++	for (j = 0; i < count; i++) {
++
++		char c = buf[i];
++
++		if ((c >= '0') && (c <= '9')) {
++			pair[j] *= 10;
++			pair[j] += (c - '0');
++		}
++		else if ((c == ' ') || (c == '\t')) {
++			if (pair[j] != 0) {
++				j++;
++
++				if ((sign != 0) || (j > 1))
++					break;
++			}
++		}
++		else
++			break;
++	}
++
++	if (sign != 0) {
++		if (pair[0] > 0)
++			acpuclk_set_vdd(0, sign * pair[0]);
++	}
++	else {
++		if ((pair[0] > 0) && (pair[1] > 0))
++			acpuclk_set_vdd((unsigned)pair[0], pair[1]);
++		else
++			return -EINVAL;
++	}
++	return count;
++}
++
++#endif 	/* CPU VOLTAGE TABLE */
++
+ cpufreq_freq_attr_ro_perm(cpuinfo_cur_freq, 0400);
+ cpufreq_freq_attr_ro(cpuinfo_min_freq);
+ cpufreq_freq_attr_ro(cpuinfo_max_freq);
+@@ -535,6 +597,9 @@ static ssize_t show_bios_limit(struct cpufreq_policy *policy, char *buf)
+ cpufreq_freq_attr_rw(scaling_max_freq);
+ cpufreq_freq_attr_rw(scaling_governor);
+ cpufreq_freq_attr_rw(scaling_setspeed);
++#ifdef CONFIG_USERSPACE_VOLTAGE_CONTROL
++define_one_global_rw(vdd_levels);
++#endif
+ 
+ static struct attribute *default_attrs[] = {
+ 	&cpuinfo_min_freq.attr,
+@@ -552,6 +617,18 @@ static ssize_t show_bios_limit(struct cpufreq_policy *policy, char *buf)
+ 	NULL
+ };
+ 
++#ifdef CONFIG_USERSPACE_VOLTAGE_CONTROL
++static struct attribute *vddtbl_attrs[] = {
++  	&vdd_levels.attr,
++  	NULL
++};
++
++static struct attribute_group vddtbl_attr_group = {
++  	.attrs = vddtbl_attrs,
++  	.name = "vdd_table",
++};
++#endif /* CPU VOLTAGE TABLE */
++
+ struct kobject *cpufreq_global_kobject;
+ EXPORT_SYMBOL(cpufreq_global_kobject);
+ 
+@@ -1732,6 +1809,9 @@ int cpufreq_unregister_driver(struct cpufreq_driver *driver)
+ static int __init cpufreq_core_init(void)
+ {
+ 	int cpu;
++#ifdef CONFIG_USERSPACE_VOLTAGE_CONTROL
++  	int rc;
++#endif /* CPU VOLTAGE TABLE */
+ 
+ 	if (cpufreq_disabled())
+ 		return -ENODEV;
+@@ -1745,6 +1825,9 @@ static int __init cpufreq_core_init(void)
+ 	BUG_ON(!cpufreq_global_kobject);
+ 	register_syscore_ops(&cpufreq_syscore_ops);
+ 
++#ifdef CONFIG_USERSPACE_VOLTAGE_CONTROL
++	rc = sysfs_create_group(cpufreq_global_kobject, &vddtbl_attr_group);
++#endif /* CPU VOLTAGE TABLE */
+ 	return 0;
+ }
+ core_initcall(cpufreq_core_init);
+-- 
+1.8.5.1
+
