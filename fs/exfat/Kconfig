@@ -1,0 +1,8 @@
+config EXFAT_MODULE
+	tristate "EX-Fat module support"
+	# select NLS_UTF8
+	default m
+	help
+	  EX-Fat module source from Samsung. compile it as a module and load it via ramdisk
+
+	  Default compilation option as a module ONLY.
