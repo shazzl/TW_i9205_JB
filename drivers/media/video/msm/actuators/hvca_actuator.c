@@ -71,6 +71,8 @@
 #define	DATA_1BYTE		0x01
 #define	DATA_2BYTE		0x02
 
+#define OFFSET_LIMIT	0x07
+
 static struct msm_camera_i2c_client *af_client;
 static int16_t position_inf1, position_mac1;
 /*Start : shchang@qti.qualcomm.com - 20130308 */
@@ -583,6 +585,8 @@ int32_t hvca_actuator_init_focus(
 /*Start : shchang@qti.qualcomm.com - 20130312 */
 extern uint16_t inf_dac1, inf_dac2, start_dac, macro_dac1, macro_dac2; 	
 /*End : shchang@qti.qualcomm.com - 20130312 */
+extern uint16_t cal_offset;//SEMCO Request by Lizk 05112013	
+extern bool is_af_final; //SEMCO Request by Lizk 05112013
 
 int32_t hvca_actuator_init_step_table(
 	struct msm_actuator_ctrl_t *a_ctrl,
@@ -687,13 +691,53 @@ int32_t hvca_actuator_move_focus(
 	struct msm_actuator_ctrl_t *a_ctrl,
 	struct msm_actuator_move_params_t *move_params)
 {
+	int32_t new_step_position_table, offset;
 /*Start : shchang@qti.qualcomm.com - 20130312 */
 
 	CDBG_HVCA("HVCA (move_focus) direction[%2d], num_steps[%2d], index[%2d], Table_Value = %6d\n",
 		move_params->sign_dir, move_params->num_steps, move_params->dest_step_pos, a_ctrl->step_position_table[move_params->dest_step_pos]);
 /*End : shchang@qti.qualcomm.com - 20130312 */
 
-	hvca_lensMovePulse(a_ctrl->step_position_table[move_params->dest_step_pos]);
+
+	new_step_position_table = a_ctrl->step_position_table[move_params->dest_step_pos];
+
+	if(is_af_final)
+	{
+		CDBG_HVCA("hvca_actuator_move_focus  : cal offset before limiter(%2x) = %2x", OFFSET_LIMIT, cal_offset);
+
+		if((cal_offset & 0xFF) >= OFFSET_LIMIT)
+		{
+			cal_offset = OFFSET_LIMIT | (cal_offset & 0x100);
+		}
+		CDBG_HVCA("hvca_actuator_move_focus  : cal offset after limiter(%2x) = %2x", OFFSET_LIMIT, cal_offset);
+
+		if(cal_offset >= 0x100)
+		{
+			offset = (cal_offset - 0x100) * (-1);
+		}
+		else
+		{
+			offset = cal_offset;
+		}
+
+		new_step_position_table = (new_step_position_table >> 6);
+    CDBG_HVCA("hvca_actuator_move_focus  : final lens position(%d) DAC code before cal offset = %2x", 55 - move_params->dest_step_pos, new_step_position_table);
+		new_step_position_table += offset;
+		CDBG_HVCA("hvca_actuator_move_focus  : cal offset = %2d ", offset);
+		CDBG_HVCA("hvca_actuator_move_focus  : final lens position(%d) DAC code after cal offset = %2x\n", 55 - move_params->dest_step_pos, new_step_position_table);
+
+		if(new_step_position_table < 0x0000)
+			new_step_position_table = 0x0000;
+		else if(new_step_position_table > 0xFFFF)
+			new_step_position_table = 0xFFFF;
+		
+		new_step_position_table = (new_step_position_table<<6) & 0xFFC0;	
+		
+		is_af_final = false;
+	}
+	hvca_lensMovePulse(new_step_position_table);
+	//hvca_lensMovePulse(a_ctrl->step_position_table[move_params->dest_step_pos]);
+/* End - Lizk: SEMCO Request */
 
 	return 0;
 }

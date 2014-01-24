@@ -58,6 +58,7 @@ static s32 large_file;
 static int sr030pc50_sensor_config(struct msm_sensor_ctrl_t *s_ctrl,
 	void __user *argp);
 static void sr030pc50_set_ev(int ev);
+static void sr030pc50_set_flip(int flip);
 DEFINE_MUTEX(sr030pc50_mut);
 
 #define sr030pc50_WRT_LIST(A)	\
@@ -630,6 +631,39 @@ void sr030pc50_set_preview_size(int32_t index)
 
 	sr030pc50_ctrl->settings.preview_size_idx = index;
 }
+/* Supporting effects */
+
+static int sr030pc50_set_effect(int effect)
+{
+	CAM_DEBUG(" %d", effect);
+
+	switch (effect) {
+	case CAMERA_EFFECT_OFF:
+		sr030pc50_WRT_LIST(sr030pc50_effect_none);
+		break;
+
+	case CAMERA_EFFECT_MONO:
+		sr030pc50_WRT_LIST(sr030pc50_effect_gray);
+		break;
+
+	case CAMERA_EFFECT_NEGATIVE:
+		sr030pc50_WRT_LIST(sr030pc50_effect_negative);
+		break;
+
+	case CAMERA_EFFECT_SEPIA:
+		sr030pc50_WRT_LIST(sr030pc50_effect_sepia);
+		break;
+
+	default:
+		CAM_DEBUG(" effect : default");
+		sr030pc50_WRT_LIST(sr030pc50_effect_none);
+		return 0;
+	}
+
+	sr030pc50_ctrl->settings.effect = effect;
+
+	return 0;
+}
 
 
 void sr030pc50_set_preview(void)
@@ -915,13 +949,18 @@ void sensor_native_control_front(void __user *arg)
 		ctrl_info.value_1 = sr030pc50_get_exif(ctrl_info.address,
 			ctrl_info.value_2);
 		break;
+	case EXT_CAM_SET_FLIP:
+		CAM_DEBUG(" Dhana- FLIP mode : %d", ctrl_info.value_1);
+		sr030pc50_set_flip(ctrl_info.value_1);
+		sr030pc50_ctrl->mirror_mode = ctrl_info.value_1;
+		break;
 
-/*
+
 
 	case EXT_CAM_EFFECT:
 		sr030pc50_set_effect(ctrl_info.value_1);
 		break;
-
+/*
 	case EXT_CAM_WB:
 		sr030pc50_set_whitebalance(ctrl_info.value_1);
 		break;
@@ -1123,6 +1162,38 @@ static int sr030pc50_enum_fmt(struct v4l2_subdev *sd, unsigned int index,
 	return 0;
 }
 
+static void sr030pc50_set_flip(int flip)
+{
+	unsigned char r_data, checkSubSampling = 0;
+	CAM_DEBUG("flip : %d", flip);
+
+	sr030pc50_i2c_write_16bit(0xFF87);
+	sr030pc50_i2c_read(0xD5, &r_data);
+	if (r_data & 0x02)
+		checkSubSampling = 1;
+	switch (flip) {
+	case 0:
+		if (sr030pc50_ctrl->cam_mode == MOVIE_MODE) {
+			sr030pc50_WRT_LIST(sr030pc50_flip_off_No15fps);
+		} else {					/* for 15fps */
+			sr030pc50_WRT_LIST(sr030pc50_flip_off);
+		}
+		break;
+
+	case 1:
+		if (sr030pc50_ctrl->cam_mode == MOVIE_MODE) {
+			sr030pc50_WRT_LIST(sr030pc50_hflip_No15fps);
+		} else {					/* for 15fps */
+			sr030pc50_WRT_LIST(sr030pc50_hflip);
+		}
+		break;
+
+	default:
+		CAM_DEBUG("flip : default");
+		break;
+	}
+}
+
 void sr030pc50_sensor_start_stream(struct msm_sensor_ctrl_t *s_ctrl)
 {
 	CAM_DEBUG("Start_stream");
@@ -1137,10 +1208,10 @@ void sr030pc50_sensor_start_stream(struct msm_sensor_ctrl_t *s_ctrl)
 			sr030pc50_ctrl->op_mode == CAMERA_MODE_PREVIEW) {
 			sr030pc50_WRT_LIST(sr030pc50_Init_Reg);
 			sr030pc50_WRT_LIST(sr030pc50_24_fps_60Hz);
-
-			/*if (sr030pc50_ctrl->mirror_mode == 1)
+			sr030pc50_set_effect(sr030pc50_ctrl->settings.effect);
+			if (sr030pc50_ctrl->mirror_mode == 1)
 					sr030pc50_set_flip( \
-					sr030pc50_ctrl->mirror_mode);*/
+					sr030pc50_ctrl->mirror_mode);
 			}
 		} else {
 		CAM_DEBUG("VGA recording");
@@ -1148,10 +1219,10 @@ void sr030pc50_sensor_start_stream(struct msm_sensor_ctrl_t *s_ctrl)
 			sr030pc50_ctrl->op_mode == CAMERA_MODE_RECORDING ||
 			sr030pc50_ctrl->op_mode == CAMERA_MODE_PREVIEW) {
 		sr030pc50_WRT_LIST(sr030pc50_Init_Reg);
-
-		/*if (sr030pc50_ctrl->mirror_mode == 1)
+		sr030pc50_set_effect(sr030pc50_ctrl->settings.effect);
+		if (sr030pc50_ctrl->mirror_mode == 1)
 				sr030pc50_set_flip( \
-				sr030pc50_ctrl->mirror_mode);*/
+				sr030pc50_ctrl->mirror_mode);
 			}
 		}
 

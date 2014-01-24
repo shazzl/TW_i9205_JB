@@ -616,15 +616,14 @@ static int tapan_mute_set_command(struct snd_kcontrol *kcontrol,
 
 	pr_info("%s /reg=%d, shift=%d, value=%d\n", __func__, reg, shift, value);
 
-	if(value==0)
+	if(value == 0)
 	{
-		snd_soc_update_bits(codec, TAPAN_A_CDC_TX3_VOL_CTL_GAIN, 0xff, 0);
+		snd_soc_update_bits(codec, TAPAN_A_CDC_TX2_VOL_CTL_GAIN, 0xff, 0);
 		snd_soc_update_bits(codec, TAPAN_A_CDC_TX4_VOL_CTL_GAIN, 0xff, 0);
-
 	}
-	else if(value==1)
+	else if(value == 1)
 	{
-		snd_soc_update_bits(codec, TAPAN_A_CDC_TX3_VOL_CTL_GAIN, 0xff, -84);
+		snd_soc_update_bits(codec, TAPAN_A_CDC_TX2_VOL_CTL_GAIN, 0xff, -84);
 		snd_soc_update_bits(codec, TAPAN_A_CDC_TX4_VOL_CTL_GAIN, 0xff, -84);
 	}
 
@@ -4222,7 +4221,7 @@ static const struct tapan_reg_mask_val tapan_reg_defaults[] = {
 	/*Reduce EAR DAC bias to 70% */
 	TAPAN_REG_VAL(TAPAN_A_RX_EAR_BIAS_PA, 0x76),
 	/* Reduce LINE DAC bias to 70% */
-	TAPAN_REG_VAL(TAPAN_A_RX_LINE_BIAS_PA, 0x78),
+	TAPAN_REG_VAL(TAPAN_A_RX_LINE_BIAS_PA, 0x7A),
 
 	/*
 	 * There is a diode to pull down the micbias while doing

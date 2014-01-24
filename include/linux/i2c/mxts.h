@@ -10,7 +10,7 @@
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  2013_0425_01
+ *  2013_0515_01
  */
 
 #ifndef __MXT_H__
@@ -133,7 +133,6 @@ enum {
 #define MXT_OBJECT_TABLE_ELEMENT_SIZE	6
 #define MXT_OBJECT_TABLE_START_ADDRESS	7
 
-#define MXT_MAX_FINGER		8
 #define MXT_AREA_MAX		255
 #define MXT_AMPLITUDE_MAX	255
 
@@ -275,8 +274,11 @@ enum {
 
 /************** Feature + **************/
 #if defined(CONFIG_MACH_EXPRESS2)
+#define CHECK_PALM	0
+#define NO_GR_MODE	0//0612
 #define CHECK_ANTITOUCH			1
 #define CHECK_ANTITOUCH_SERRANO	0
+#define CHECK_ANTITOUCH_GOLDEN	0
 #define MaxStartup_Set		0
 #define DEBUG_TSP				1
 #define TSP_USE_SHAPETOUCH		0
@@ -284,7 +286,10 @@ enum {
 #define TSP_BOOSTER			0
 #define SUPPORT_CONFIG_VER	0
 #elif defined(CONFIG_MACH_SERRANO) || defined(CONFIG_MACH_CRATER) || defined (CONFIG_MACH_BAFFIN) || defined(CONFIG_MACH_CANE)
+#define CHECK_PALM	1
+#define NO_GR_MODE	0//0614
 #define CHECK_ANTITOUCH			0
+#define CHECK_ANTITOUCH_GOLDEN	0
 #define CHECK_ANTITOUCH_SERRANO	1
 #define MaxStartup_Set		1
 #define TSP_USE_SHAPETOUCH		1
@@ -292,9 +297,24 @@ enum {
 #define CLEAR_COVER			1
 #define TSP_BOOSTER			1
 #define SUPPORT_CONFIG_VER	1
+#elif defined(CONFIG_MACH_GOLDEN)
+#define CHECK_PALM	0
+#define NO_GR_MODE	0//0612
+#define CHECK_ANTITOUCH			0
+#define CHECK_ANTITOUCH_GOLDEN	1
+#define CHECK_ANTITOUCH_SERRANO	0
+#define MaxStartup_Set		0
+#define TSP_USE_SHAPETOUCH		1
+#define DEBUG_TSP				1
+#define CLEAR_COVER			0
+#define TSP_BOOSTER			1
+#define SUPPORT_CONFIG_VER	1
 #else
+#define CHECK_PALM	0
+#define NO_GR_MODE	0//0612
 #define CHECK_ANTITOUCH			0
 #define CHECK_ANTITOUCH_SERRANO	0
+#define CHECK_ANTITOUCH_GOLDEN	0
 #define MaxStartup_Set		0
 #define DEBUG_TSP				0
 #define TSP_USE_SHAPETOUCH		0
@@ -311,6 +331,12 @@ enum {
 #endif
 
 #define ENABLE_TOUCH_KEY		0
+
+#if CHECK_ANTITOUCH_GOLDEN
+#define MXT_MAX_FINGER		10
+#else
+#define MXT_MAX_FINGER		8
+#endif
 
 /* TODO TEMP_HOVER : Need to check and modify
  * it can be changed related potocol of hover So current
@@ -329,6 +355,12 @@ enum {
 //#define TSP_USE_ATMELDBG		0
 //#endif
 /************** Feature - **************/
+
+#if 0 //CHECK_ANTITOUCH_SERRANO //130508
+/* resolution*/
+#define X_RESOLUTION  539
+#define Y_RESOLUTION  959
+#endif
 
 #if CHECK_ANTITOUCH
 #define MAX_USING_FINGER_NUM	10
@@ -415,7 +447,7 @@ struct mxt_platform_data {
 	unsigned char revision;
 	const char *firmware_name;
 
-#if CHECK_ANTITOUCH | CHECK_ANTITOUCH_SERRANO
+#if CHECK_ANTITOUCH | CHECK_ANTITOUCH_SERRANO | CHECK_ANTITOUCH_GOLDEN
 	u8 check_autocal;
 #endif
 #if CHECK_ANTITOUCH
@@ -481,6 +513,7 @@ struct mxt_finger {
 	u16 y;
 	u16 w;
 	u16 z;
+	u16 stylus;//0617
 #if TSP_USE_SHAPETOUCH
 	u16 component;
 #endif
@@ -593,14 +626,29 @@ struct mxt_data {
 	int touchbx_backup[MAX_USING_FINGER_NUM];
 	int touchby_backup[MAX_USING_FINGER_NUM];
 #elif CHECK_ANTITOUCH_SERRANO
+	u8		Report_touch_number;
 	bool		check_antitouch;//In First Step, exist antichannel
 	bool		check_after_wakeup; //In First Step,after wakeup
 	bool		TimerSet;//In Second Step, No Big Tcharea and No Atch 
+	bool		WakeupPowerOn;//0613
 	u8		GoodConditionStep;//checking good condition step
 	u8		GoodStep1_AllReleased; //check release status in good condition 1
-	u8		AutoCalSet;	
+	u8		T72_State;//0615
 	u8		GoldenBadCheckCnt; //check wheather to get golden reference good or not
 	u8		T66_CtrlVal;
+	u8		Wakeup_Reset_Check_Press;
+	u8		Exist_Stylus;//0613
+	u8		Exist_EdgeTouch;
+	u8      TwoTouchLensBending;//0619	
+#elif CHECK_ANTITOUCH_GOLDEN
+	bool		check_antitouch;//In First Step, exist antichannel
+	bool		check_after_wakeup; //In First Step,after wakeup
+	bool		TimerSet;//In Second Step, No Big Tcharea and No Atch 
+	u8 		Report_touch_number;
+#endif
+#if CHECK_PALM //0617
+	u8		PalmFlag;
+	u8		PressEventCheck;
 #endif
 #ifdef CONFIG_HAS_EARLYSUSPEND
 	struct early_suspend early_suspend;

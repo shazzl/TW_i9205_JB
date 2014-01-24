@@ -94,7 +94,7 @@
 #define BYTES_PER_SENSOR	6
 #define DEF_ST_STABLE_TIME	200
 #define THREE_AXIS		3
-#define DEF_GYRO_WAIT_TIME	10
+#define DEF_GYRO_WAIT_TIME	51
 #define DEF_ST_PRECISION	1000
 #define BIT_ACCEL_OUT		0x08
 #define BITS_GYRO_OUT		0x70
@@ -633,7 +633,7 @@ static int mpu6500_do_powerup(struct i2c_client *client)
 
 	mpu6500_i2c_write_single_reg(client, MPUREG_PWR_MGMT_1, 0x1);
 
-	msleep(20);
+	mdelay(20);
 
 	mpu6500_i2c_read_reg(client, MPUREG_PWR_MGMT_2, 1, &reg);
 
@@ -678,7 +678,7 @@ static int mpu6500_do_test(struct i2c_client *client, int self_test_flag, int *g
 		return result;
 
 	/* wait for the output to get stable */
-	msleep(DEF_ST_STABLE_TIME);
+	mdelay(DEF_ST_STABLE_TIME);
 
 	/* enable FIFO reading */
 	result = mpu6500_i2c_write_single_reg(client,
@@ -697,7 +697,11 @@ static int mpu6500_do_test(struct i2c_client *client, int self_test_flag, int *g
 	s = 0;
 
 	while (s < INIT_ST_SAMPLES) {
-		msleep(DEF_GYRO_WAIT_TIME);
+		mdelay(DEF_GYRO_WAIT_TIME);
+		/* stop sending data to FIFO */
+		result = mpu6500_i2c_write_single_reg(client, MPUREG_FIFO_EN, 0);
+		if (result)
+			return result;
 
 		result = mpu6500_i2c_read_reg(client,
 			MPUREG_FIFO_COUNTH, FIFO_COUNT_BYTE, data);
@@ -731,11 +735,6 @@ static int mpu6500_do_test(struct i2c_client *client, int self_test_flag, int *g
 			i++;
 		}
 	}
-
-	/* stop sending data to FIFO */
-	result = mpu6500_i2c_write_single_reg(client, MPUREG_FIFO_EN, 0);
-	if (result)
-		return result;
 
 	for (j = 0; j < THREE_AXIS; j++) {
 		gyro_result[j] = gyro_result[j]/s;

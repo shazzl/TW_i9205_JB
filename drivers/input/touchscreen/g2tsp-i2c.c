@@ -43,7 +43,7 @@ static s32 g2tsp_i2c_write_reg(void *handle, u8 addr, u8 value)
     int retval;
     struct g2tsp_i2c *ts = container_of(handle, struct g2tsp_i2c, ops);
 
-	g2debug2("%s\n", __func__);
+//	g2debug2("%s\n", __func__);
     data[0] = addr;
 	data[1] = value;
     retval = i2c_master_send(ts->client, data, 2);
@@ -61,7 +61,7 @@ static s32 g2tsp_i2c_read_block_data(void *handle, u8 addr,
     int retval = 0;
     struct g2tsp_i2c *ts = container_of(handle, struct g2tsp_i2c, ops);
 
-	g2debug2("%s\n", __func__);
+	g2debug1("%s\n", __func__);
 
     retval = i2c_master_send(ts->client, &addr, 1);
     if (retval < 0){
@@ -81,7 +81,7 @@ static s32 g2tsp_i2c_write_block_data(void *handle, u8 addr,
     int retval;
     struct g2tsp_i2c *ts = container_of(handle, struct g2tsp_i2c, ops);
 
-	g2debug("%s\n", __func__);
+	g2debug2("%s\n", __func__);
     num_bytes = length;
     data[0] = addr;
     count = (num_bytes > I2C_SMBUS_BLOCK_MAX) ?
@@ -106,27 +106,14 @@ static s32 g2tsp_i2c_write_block_data(void *handle, u8 addr,
     return 0;
 }
 
-/*
-static void read_i2c_test(struct g2tsp_bus_ops *ops)
-{
-	int i = 0;
-	int ret = 0;
-	u8 data[0x30 + 1];
 
-	ret = g2tsp_i2c_read_block_data(ops, 0, 0x30, (u8 *)&data[0]);
-	g2debug("read ret : %d\n", ret);
-
-	for (i=0;i<0x30;i++)
-		g2debug("%x %x\n",i, data[i]);
-
-}
-*/
 static int __devinit g2tsp_i2c_probe(struct i2c_client *client, const struct i2c_device_id *id)
 {
     struct g2tsp_i2c *ts;
     int retval;
 	
-	g2debug("%s\n", __func__);
+	g2debug1("%s\n", __func__);
+	
     /* allocate and clear memory */
     ts = kzalloc(sizeof(*ts), GFP_KERNEL);
     if (ts == NULL) {
@@ -193,13 +180,13 @@ static struct i2c_driver g2tsp_i2c_driver = {
 
 static int g2tsp_i2c_init(void)
 {
-	g2debug("%s\n", __func__);
+	g2debug1("%s\n", __func__);
     return i2c_add_driver(&g2tsp_i2c_driver);
 }
 
 static void g2tsp_i2c_exit(void)
 {
-	g2debug("%s\n", __func__);
+	g2debug1("%s\n", __func__);
     return i2c_del_driver(&g2tsp_i2c_driver);
 }
 

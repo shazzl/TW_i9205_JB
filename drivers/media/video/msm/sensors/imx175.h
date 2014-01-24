@@ -55,7 +55,7 @@ static struct msm_camera_i2c_reg_conf imx175_res_settings[] = {
 /*Start : shchang@qti.qualcomm.com - 20130312 */
 	{0x0100, 0x00}, /*Stop streaming*/
 	{0x0103, 0x01},
-#if defined(CONFIG_MACH_CRATER) || defined(CONFIG_MACH_BAFFIN)
+#if defined(CONFIG_MACH_CRATER) || defined(CONFIG_MACH_BAFFIN)|| defined(CONFIG_MACH_CRATER_CHN_CTC)
 	{0x0101, 0x03}, /*Orientation V-H Flip*/
 #endif
 /*End : shchang@qti.qualcomm.com - 20130312 */

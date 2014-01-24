@@ -775,7 +775,13 @@ config LM48560_RCV
 	depends on I2C
 	help
 	  If you say yes here you get support for the RCV device of TI M48560.
-
+	  
+config TIMA_LOG
+	tristate "Support for dumping TIMA log"
+	default m
+	help
+	  This option enables support for dumping TIMA log
+	  
 source "drivers/misc/c2port/Kconfig"
 source "drivers/misc/eeprom/Kconfig"
 source "drivers/misc/cb710/Kconfig"

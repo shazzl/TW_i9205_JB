@@ -233,7 +233,7 @@ static int cyttsp4_debug_attention(struct cyttsp4_device *ttsp)
 {
 	struct device *dev = &ttsp->dev;
 	struct cyttsp4_debug_data *dd = dev_get_drvdata(dev);
-	int rc = 0;
+	int rc;
 
 	dev_vdbg(dev, "%s\n", __func__);
 

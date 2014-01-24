@@ -198,13 +198,13 @@ static int _cyttsp4_get_status(struct cyttsp4_device *ttsp,
 	struct device *dev = &ttsp->dev;
 	struct cyttsp4_loader_data *data = dev_get_drvdata(dev);
 
-	unsigned long uretval;
-	int tries;
+//	unsigned long uretval;
 	int retval = 0;
 
 	if (timeout_ms != 0) {
+		int tries;
 		/* wait until status ready interrupt or timeout occurs */
-		uretval = wait_for_completion_timeout(
+		wait_for_completion_timeout(
 			&data->int_running, msecs_to_jiffies(timeout_ms));
 
 		/* TODO: Reconsider purpose of having retries here */
@@ -295,9 +295,9 @@ static int _cyttsp4_ldr_enter(struct cyttsp4_device *ttsp,
 	struct device *dev = &ttsp->dev;
 	struct cyttsp4_loader_data *data = dev_get_drvdata(dev);
 
-	u16 crc = 0;
+	u16 crc;
 	int i = 0;
-	size_t cmd_size = 0;
+	size_t cmd_size;
 	u8 *status_buf = &data->status_buf[0];
 	u8 status = 0;
 	int retval;
@@ -366,7 +366,7 @@ static int _cyttsp4_ldr_init(struct cyttsp4_device *ttsp)
 {
 	u16 crc;
 	int i = 0;
-	int retval = 0;
+	int retval;
 	/* +1 for TMA400 host sync byte */
 	u8 ldr_init_cmd[CY_CMD_LDR_INIT_CMD_SIZE+1];
 
@@ -428,18 +428,19 @@ static int _cyttsp4_ldr_prog_row(struct cyttsp4_device *ttsp,
 				 struct cyttsp4_hex_image *row_image)
 {
 	u16 crc;
-	int next;
-	int data;
-	int row_data;
-	u16 row_sum;
-	size_t data_len;
+//	u16 row_sum;
 	int retval = 0;
 
 	u8 *cmd = kzalloc(CY_MAX_PACKET_LEN, GFP_KERNEL);
 
 	if (cmd != NULL) {
+		int next;
+		int data;
+		int row_data;
+		size_t data_len;
+		
 		row_data = 0;
-		row_sum = 0;
+//		row_sum = 0;
 		next = 0;
 		cmd[next++] = CY_CMD_LDR_HOST_SYNC;
 		cmd[next++] = CY_START_OF_PACKET;
@@ -457,7 +458,7 @@ static int _cyttsp4_ldr_prog_row(struct cyttsp4_device *ttsp,
 		for (data = 0;
 			data < data_len; data++) {
 			cmd[next] = row_image->row_data[row_data++];
-			row_sum += cmd[next];
+//			row_sum += cmd[next];
 			next++;
 		}
 
@@ -491,10 +492,10 @@ cyttsp4_ldr_prog_row_exit:
 static int _cyttsp4_ldr_verify_row(struct cyttsp4_device *ttsp,
 	struct cyttsp4_hex_image *row_image)
 {
-	u16 crc = 0;
+	u16 crc;
 	int i = 0;
 	u8 verify_checksum;
-	int retval = 0;
+	int retval;
 	/* +1 for TMA400 host sync byte */
 	u8 ldr_verify_row_cmd[CY_CMD_LDR_VERIFY_ROW_CMD_SIZE+1];
 
@@ -528,9 +529,9 @@ static int _cyttsp4_ldr_verify_row(struct cyttsp4_device *ttsp,
 static int _cyttsp4_ldr_verify_chksum(struct cyttsp4_device *ttsp,
 	u8 *app_chksum)
 {
-	u16 crc = 0;
+	u16 crc;
 	int i = 0;
-	int retval = 0;
+	int retval;
 	/* +1 for TMA400 host sync byte */
 	u8 ldr_verify_chksum_cmd[CY_CMD_LDR_VERIFY_CHKSUM_CMD_SIZE+1];
 
@@ -562,7 +563,7 @@ static int _cyttsp4_ldr_verify_chksum(struct cyttsp4_device *ttsp,
 static int _cyttsp4_ldr_exit(struct cyttsp4_device *ttsp)
 {
 	struct device *dev = &ttsp->dev;
-	u16 crc = 0;
+	u16 crc;
 	int i = 0;
 	int retval;
 	/* +1 for TMA400 host sync byte */
@@ -607,7 +608,8 @@ static int _cyttsp4_load_app(struct cyttsp4_device *ttsp, const u8 *fw,
 
 	u8 *row_buf = NULL;
 	/* Prevent loading if TMA ver not defined. */
-	size_t image_rec_size = fw_size + 1;
+//	size_t image_rec_size = fw_size + 1;
+	size_t image_rec_size;
 	size_t row_buf_size = 1024 > CY_MAX_PRBUF_SIZE ?
 		1024 : CY_MAX_PRBUF_SIZE;
 	int row_count = 0;
@@ -1009,7 +1011,7 @@ static void cyttsp4_fw_calibrate(struct cyttsp4_device *ttsp)
 	if (return_buf[0] != 0) {
 		dev_err(dev, "%s: initialize baselines command unsuccessful\n",
 			__func__);
-		rc = -EINVAL;
+//		rc = -EINVAL;
 		goto exit_setmode;
 	}
 
@@ -1169,7 +1171,6 @@ static void _cyttsp4_firmware_cont(const struct firmware *fw, void *context)
 {
 	struct cyttsp4_device *ttsp = context;
 	struct device *dev = &ttsp->dev;
-	int retval = 0;
 	u8 header_size = 0;
 
 	if (fw == NULL)

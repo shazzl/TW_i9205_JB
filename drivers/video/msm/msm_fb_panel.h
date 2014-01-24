@@ -154,7 +154,8 @@ struct msm_panel_info {
 	__u32 xres;
 	__u32 yres;
 #if defined(CONFIG_MACH_MELIUS) \
-	|| defined(CONFIG_FB_MSM_MIPI_SAMSUNG_OLED_VIDEO_QHD_PT)
+	|| defined(CONFIG_FB_MSM_MIPI_SAMSUNG_OLED_VIDEO_QHD_PT) || defined(CONFIG_MACH_LT02_CHN_CTC) \
+	|| defined(CONFIG_FB_MSM_MIPI_SAMSUNG_TFT_VIDEO_WSVGA_PT_PANEL)
 	__u32 height;
 	__u32 width;
 #endif

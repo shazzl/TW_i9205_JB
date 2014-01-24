@@ -302,7 +302,7 @@ static int __init mipi_novatek_tft_video_hd_pt_init(void)
 	pinfo.lcdc.v_pulse_width = 2;	/* tvpw */
 
 	pinfo.lcdc.border_clr = 0;		/* black */
-	pinfo.lcdc.underflow_clr = 0x0;	/* black */
+	pinfo.lcdc.underflow_clr = 0xff;	/* blue */
 
 	pinfo.lcdc.hsync_skew = 0;
 

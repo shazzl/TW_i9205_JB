@@ -55,6 +55,8 @@
 #define FORCE_RELEASE				0
 #define UPDATE_ON_PROBE				1
 #define SEC_TSP_FACTORY_TEST
+#define TOUCH_BOOSTER				0
+#define PALM_CAL				1
 
 #if defined(SEC_TSP_FACTORY_TEST)
 #define TSP_BUF_SIZE				1024

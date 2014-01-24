@@ -13,6 +13,16 @@ source "drivers/sensors/optical/Kconfig"
 source "drivers/sensors/accelerometer_k2dh/Kconfig"
 endif # INPUT_YAS_SENSORS
 
+menuconfig GRIP_SENSOR
+	bool "Sensors Support"
+	help
+	  Say Y to enable grip Sensors support.  This allows control of supported
+	  Sensors.
+
+if GRIP_SENSOR
+source "drivers/sensors/grip/Kconfig"
+endif
+
 config SENSORS_CORE
          bool "sensors_core"
          depends on I2C

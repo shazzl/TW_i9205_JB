@@ -272,7 +272,7 @@ static int mxt_read_all_diagnostic_data(struct mxt_data *data, u8 dbg_mode)
 
 	/* check dual-x mode */
 	dual_x_mode = mxt_check_dual_x_mode(data);
-
+	
 	/* to make the Page Num to 0 */
 	ret = mxt_set_diagnostic_mode(data, MXT_DIAG_CTE_MODE);
 	if (ret)
@@ -331,6 +331,7 @@ static int mxt_read_all_diagnostic_data(struct mxt_data *data, u8 dbg_mode)
 				goto out;
 			}
 		} while (cur_page != read_page + 1);
+		msleep(30);
 	}
 
 	if (dbg_mode == MXT_DIAG_REFERENCE_MODE) {
@@ -572,7 +573,11 @@ out:
 		set_cmd_result(fdata, buff, strnlen(buff, sizeof(buff)));
 		fdata->cmd_state = CMD_STATUS_OK;
 	}
-
+#if CHECK_ANTITOUCH_SERRANO
+	dev_info(&data->client->dev, "Disable GR after FWupdate \n");
+    	mxt_gdc_init_config(data);//0617
+	mxt_command_calibration(data);
+#endif
 	return;
 }
 
@@ -717,7 +722,6 @@ static void module_off_master(void *device_data)
 
 	mutex_lock(&data->input_dev->mutex);
 
-	touch_is_pressed = 0;
 	if (mxt_stop(data))
 		snprintf(buff, sizeof(buff), "%s", "NG");
 	else
@@ -867,6 +871,19 @@ static void run_reference_read(void *device_data)
 
 	set_default_result(fdata);
 
+#if CHECK_ANTITOUCH_SERRANO
+	ret = mxt_write_object(data, MXT_PROCG_NOISESUPPRESSION_T72, 40, 1);
+	ret = mxt_write_object(data, MXT_PROCG_NOISESUPPRESSION_T72, 60, 1);
+	ret = mxt_write_object(data, MXT_PROCI_EXTRATOUCHSCREENDATA_T57, 0, 0);
+	ret = mxt_write_object(data, MXT_PROCI_STYLUS_T47, 3, 255);
+	ret = mxt_write_object(data, MXT_PROCI_STYLUS_T47, 4, 10);
+	ret = mxt_write_object(data, MXT_PROCI_STYLUS_T47, 5, 100);
+	ret = mxt_write_object(data, MXT_PROCI_STYLUS_T47, 6, 255);
+	ret = mxt_write_object(data, MXT_PROCI_STYLUS_T47, 7, 255);
+	ret = mxt_write_object(data, MXT_PROCG_NOISESUPPRESSION_T72, 40, 1);
+	ret = mxt_write_object(data, MXT_PROCG_NOISESUPPRESSION_T72, 60, 1);	
+#endif
+
 	ret = mxt_read_all_diagnostic_data(data,
 			MXT_DIAG_REFERENCE_MODE);
 	if (ret)
@@ -878,6 +895,10 @@ static void run_reference_read(void *device_data)
 
 		fdata->cmd_state = CMD_STATUS_OK;
 	}
+#if CHECK_ANTITOUCH_SERRANO
+	ret = mxt_write_object(data, MXT_PROCG_NOISESUPPRESSION_T72, 40, 9);
+	ret = mxt_write_object(data, MXT_PROCG_NOISESUPPRESSION_T72, 60, 9);
+#endif
 }
 
 static void get_reference(void *device_data)

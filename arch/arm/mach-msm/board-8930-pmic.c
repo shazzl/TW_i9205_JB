@@ -226,6 +226,9 @@ static struct pm8xxx_mpp_init pm8917_mpps[] __initdata = {
 		PM8917_MPP_INIT(PM8XXX_AMUX_MPP_8, A_INPUT, PM8XXX_MPP_AIN_AMUX_CH8,
 								DOUT_CTRL_LOW),
 #endif
+#if defined(CONFIG_MACH_SERRANO_EUR_3G) || defined(CONFIG_MACH_SERRANO_EUR_LTE)
+		PM8917_MPP_INIT(2, SINK, PM8XXX_MPP_CS_OUT_5MA, CS_CTRL_DISABLE),
+#endif
 };
 
 void __init msm8930_pm8038_gpio_mpp_init(void)
@@ -452,6 +455,18 @@ static struct pm8921_charging_current charging_current_table[] = {
 		{ 1000,		1500},	/* DEST_DOCK */
 #endif
 };
+#if defined(CONFIG_USB_SWITCH_TSU6721) && \
+	(defined(CONFIG_MACH_SERRANO_EUR_LTE) || defined(CONFIG_MACH_SERRANO_EUR_3G))
+extern void tsu6721_monitor(void);
+#endif
+
+static void sec_bat_monitor_additional_check(void)
+{
+#if defined(CONFIG_USB_SWITCH_TSU6721) && \
+	(defined(CONFIG_MACH_SERRANO_EUR_LTE) || defined(CONFIG_MACH_SERRANO_EUR_3G))
+	tsu6721_monitor();
+#endif
+}
 
 static struct pm8921_sec_battery_data pm8921_battery_pdata __devinitdata = {
 	/* for absolute timer (first) */
@@ -460,18 +475,18 @@ static struct pm8921_sec_battery_data pm8921_battery_pdata __devinitdata = {
 	.recharging_total_time			= 90 * 60,	/* 1.5hr */
 #if defined(CONFIG_MACH_SERRANO_EUR_LTE) || defined(CONFIG_MACH_SERRANO_EUR_3G) || defined(CONFIG_MACH_CANE_EUR_3G)
 	/* temperature set (event) */
-	.temp_high_block_event		= 629,
-	.temp_high_recover_event		= 442,
+	.temp_high_block_event		= 609,
+	.temp_high_recover_event		= 422,
 	.temp_low_block_event			= -60,
 	.temp_low_recover_event		= -6,
 	/* temperature set (normal) */
-	.temp_high_block_normal		= 629,
-	.temp_high_recover_normal		= 442,
+	.temp_high_block_normal		= 609,
+	.temp_high_recover_normal		= 422,
 	.temp_low_block_normal		= -60,
 	.temp_low_recover_normal		= -6,
 	/* temperature set (lpm) */
-	.temp_high_block_lpm			= 629,
-	.temp_high_recover_lpm		= 442,
+	.temp_high_block_lpm			= 609,
+	.temp_high_recover_lpm		= 422,
 	.temp_low_block_lpm			= -60,
 	.temp_low_recover_lpm			= -6,
 #else
@@ -504,6 +519,7 @@ static struct pm8921_sec_battery_data pm8921_battery_pdata __devinitdata = {
 	.poweroff_check_soc = 1,
 
 	.chg_current_table	= charging_current_table,
+	.monitor_additional_check = sec_bat_monitor_additional_check,
 };
 
 #ifdef CONFIG_SAMSUNG_LPM_MODE
@@ -699,8 +715,9 @@ static struct pm8921_bms_platform_data pm8921_bms_pdata __devinitdata = {
 	.ocv_dis_low_soc = 1,
 	.alarm_low_mv		= 3400,
 	.alarm_high_mv		= 4000,
-	.high_ocv_correction_limit_uv		= 50,
-	.low_ocv_correction_limit_uv		= 100,
+	.high_ocv_correction_limit_uv		= 100,
+	.low_ocv_correction_limit_uv		= 150,
+	.cutoff_ocv_correction_uv	= 200,
 	.hold_soc_est				= 3,
 	.get_board_rev		= msm8930_get_board_rev,
 };

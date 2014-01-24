@@ -23,7 +23,7 @@
 /* MSM8930 GPIO */
 #define GPIO_MSM_FLASH_CNTL_EN	-1	/* 2 is MHL_EN */
 #define GPIO_MSM_FLASH_NOW		3
-/*#define GPIO_SUB_CAM_MCLK		4*/
+#define GPIO_SUB_CAM_MCLK		4
 #define GPIO_MAIN_CAM_MCLK		5
 #define GPIO_CAM_CORE_EN		6
 
@@ -44,6 +44,7 @@
 #define GPIO_CAM_A_EN			38
 #define GPIO_SD_CARD_DET_N	39
 #define GPIO_CAM_IO_EN		34  /* 34 in rev01 */
+#define GPIO_HOME_KEY		35
 #define GPIO_VOLUME_UP		50
 #define GPIO_TKEY_LED			51
 
@@ -101,18 +102,14 @@
 #define GPIO_CODEC_SDA			36
 #define GPIO_CODEC_SCK			37
 
-#define GPIO_SPKR_I2S_TX_SCK		55
+#define GPIO_SPKR_I2S_TX_SCK	55
 #define GPIO_SPKR_I2S_TX_WS		56
-#define GPIO_SPKR_I2S_TX_DIN		57
-#define GPIO_AUDIO_MCLK_REV10			59
+#define GPIO_SPKR_I2S_TX_DIN	57
+#define GPIO_AUDIO_MCLK_REV10	59
 #define GPIO_AUDIO_MCLK			53
-#define GPIO_SPKR_I2S_RX_SCK		60
-#define GPIO_SPKR_I2S_RX_DOUT		61
+#define GPIO_SPKR_I2S_RX_SCK	60
+#define GPIO_SPKR_I2S_RX_DOUT	61
 #define GPIO_SPKR_I2S_RX_WS		62
-#define GPIO_2MIC_I2C_SDA		40
-#define GPIO_2MIC_I2C_SCL		41
-#define GPIO_2MIC_PW_DN			52
-
 
 #define GPIO_VPS_AMP_EN		0
 #define GPIO_SHORT_SENDEND		94
@@ -124,19 +121,16 @@
 #define GPIO_EAR_GND			43
 #endif
 #define GPIO_EAR_MIC_BIAS_EN		151
+#define GPIO_SPK_AMP_EN		PM8038_GPIO_PM_TO_SYS(14)
 
 
 /* OTG */
 #define GPIO_OTG_TEST		150
 #define GPIO_OVP_CTRL		PM8038_GPIO_PM_TO_SYS(15)
 
-/* PMIC8038 GPIO */
-/* #define PMIC_GPIO_EAR_MICBIAS_EN	3 */
-#define PMIC_GPIO_2MIC_RST  11
 #if defined(CONFIG_WCD9304_CLK_9600)
 #define CLK_REVISION 8
 #endif
-
 
 /* gpio for changed list */
 enum {
@@ -157,8 +151,4 @@ enum {
 	BOARD_REV14,
 	BOARD_REV15,
 	GPIO_REV_MAX,
-};
-
-enum {
-	HOME_KEY,
 };

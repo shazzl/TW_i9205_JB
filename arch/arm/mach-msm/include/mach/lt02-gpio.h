@@ -46,7 +46,6 @@
 #define GPIO_VIB_EN			63
 #define GPIO_FLASH_LED_UNLOCK   64
 
-
 #define GPIO_TOUCH_IRQ		11
 #define GPIO_TOUCH_SDA		16
 #define GPIO_TOUCH_SCL		17
@@ -115,14 +114,19 @@
 /*#define GPIO_CHARGER_CHG_EN             82*/
 /*#define GPIO_CHARGER_CHG_nSTAT  150*/
 
+/* FPGA */
+#define GPIO_IRDA_SDA			33
+#define GPIO_IRDA_SCL			34
+#define GPIO_FPGA_RST_N			1	
+#define GPIO_IRDA_IRQ			77
+#define GPIO_IRDA_EN			0
+#define GPIO_FPGA_CDONE 		80
+#define GPIO_CRESET_B			82
 
 /* SENSORS */
-#define GPIO_NFC_SDA			95
-#define GPIO_NFC_SCL			96
-#define GPIO_NFC_IRQ			106
-#define GPIO_NFC_FIRMWARE		92
-#define GPIO_NFC_EN			48
-#define GPIO_NFC_CLK_REQ		90
+#define GPIO_GRIP_SDA			95
+#define GPIO_GRIP_SCL			96
+#define GPIO_GRIP_INT			92
 
 #define GPIO_SENSOR_ALS_SDA		12
 #define GPIO_SENSOR_ALS_SCL		13

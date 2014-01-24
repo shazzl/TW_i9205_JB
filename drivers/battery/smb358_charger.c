@@ -442,7 +442,8 @@ static void smb358_charger_function_control(
                 switch (charger->cable_type) {
                 case POWER_SUPPLY_TYPE_MAINS:
                 case POWER_SUPPLY_TYPE_MISC:
-		case POWER_SUPPLY_TYPE_USB_CDP:
+                case POWER_SUPPLY_TYPE_USB_CDP:
+                case POWER_SUPPLY_TYPE_UARTOFF:
                         /* High-current mode */
                         data = 0x03;
                         break;

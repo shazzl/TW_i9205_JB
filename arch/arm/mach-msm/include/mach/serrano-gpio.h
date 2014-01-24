@@ -81,7 +81,7 @@
 #define GPIO_SPKR_I2S_RX_DOUT		61
 #define GPIO_SPKR_I2S_RX_WS		62
 
-#if defined (CONFIG_MACH_SERRANO_ATT)
+#if defined (CONFIG_MACH_SERRANO_ATT) || defined(CONFIG_MACH_SERRANO_VZW)
 #define GPIO_VPS_AMP_EN		PM8038_GPIO_PM_TO_SYS(14)
 #else
 #define GPIO_VPS_AMP_EN		0
@@ -93,13 +93,8 @@
 
 #define GPIO_SHORT_SENDEND		94
 
-#if defined(CONFIG_SAMSUNG_JACK_GNDLDET)
-#define GPIO_EAR_DET			43
-#define GPIO_EAR_GND			46
-#else
 #define GPIO_EAR_DET			46
 #define GPIO_EAR_GND			43
-#endif
 
 #define GPIO_TOUCHKEY_I2C_SDA		24
 #define GPIO_TOUCHKEY_I2C_SCL		25

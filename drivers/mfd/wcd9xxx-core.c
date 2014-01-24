@@ -836,6 +836,17 @@ int wcd9xxx_i2c_read(struct wcd9xxx *wcd9xxx, unsigned short reg,
 int wcd9xxx_i2c_write(struct wcd9xxx *wcd9xxx, unsigned short reg,
 			 int bytes, void *src, bool interface_reg)
 {
+#ifndef CONFIG_EXT_EARMIC_BIAS
+	int wakeup_wait_tries = 200;
+
+	while (wcd9xxx->pm_state == WCD9XXX_PM_ASLEEP) {
+		if(--wakeup_wait_tries == 0)
+			break;
+		usleep_range(1000, 1000);
+	}
+	if (wakeup_wait_tries < 200)
+		pr_info("%s wakeup delay : %dms\n", __func__, (200 - wakeup_wait_tries));
+#endif
 	return wcd9xxx_i2c_write_device(reg, src, bytes);
 }
 

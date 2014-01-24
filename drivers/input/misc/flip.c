@@ -83,12 +83,14 @@ struct sec_flip {
 	int    		irq;
 };
 
-
 /////////////////////////////////////////////////////////////////////
 #ifdef CONFIG_DUAL_LCD
 int get_lcd_flip_status(void);
 int mipi_dsi_NULL(int on);
+int cond_mipi_dsi_NULL(void);
+int is_already_updated_disp_switch(void);
 #define RETRY_AFTER_FLIP (1) /* best =3 */
+#define RETRY_COND_DISP_FLIP (8)
 #endif
 
 extern void samsung_switching_tsp(int flip);
@@ -107,7 +109,6 @@ int Is_folder_state(void)
 	return !flip_status;
 }
 EXPORT_SYMBOL(Is_folder_state);
-
 
 static void sec_report_flip_key(struct sec_flip *flip)
 {
@@ -146,7 +147,8 @@ static void sec_flip_work_func(struct work_struct *work)
 {
 	struct sec_flip* flip = container_of( work, struct sec_flip, flip_id_det); 
 #ifdef CONFIG_DUAL_LCD
-		static int retry_cnt;
+	static int retry_cnt;
+	int i;
 #endif /* #ifdef CONFIG_DUAL_LCD */
 
 	//enable_irq(flip->irq);
@@ -156,20 +158,29 @@ static void sec_flip_work_func(struct work_struct *work)
 
 	sec_report_flip_key(flip);
 #ifdef CONFIG_DUAL_LCD
-		if (get_lcd_flip_status() != flip_status) {
-			if (mipi_dsi_NULL(0)) {
-				pr_err( "%s : mipi_dsi_NULL(0) FAILED\n", __func__ );
-			} else {
-				/* run lcd-on only if lcd-off success */
-				mdelay( 100 );
-				mipi_dsi_NULL( 1 );
-			}
-			/* after LCD change, because long time of change-rowk, recheck once more */
-			retry_cnt = 0;
-		} else if (retry_cnt < RETRY_AFTER_FLIP) {
-			pr_err( "%s : ignored Flip-LCD by processed_flip_status. retry_cnt=%d\n", __func__, retry_cnt );
-			retry_cnt ++;
+	if( is_already_updated_disp_switch() ) {
+		for (i = 0; i < RETRY_COND_DISP_FLIP; i++) {
+			mdelay(100);
+			if (cond_mipi_dsi_NULL() && !running_mipi_dsi_NULL())
+				break;
 		}
+		pr_info( "%s : wait %d*100ms by cond_mipi_dsi_NULL", __func__, i );
+	}
+
+	if (get_lcd_flip_status() != flip_status) {
+		if (mipi_dsi_NULL(0)) {
+			pr_err( "%s : mipi_dsi_NULL(0) FAILED\n", __func__ );
+		} else {
+			/* run lcd-on only if lcd-off success */
+			mdelay( 100 );
+			mipi_dsi_NULL( 1 );
+		}
+		/* after LCD change, because long time of change-rowk, recheck once more */
+		retry_cnt = 0;
+	} else if (retry_cnt < RETRY_AFTER_FLIP) {
+		pr_err( "%s : ignored Flip-LCD by processed_flip_status. retry_cnt=%d\n", __func__, retry_cnt );
+		retry_cnt ++;
+	}
 #endif /* #ifdef CONFIG_DUAL_LCD */
 
 	if (flip_status != flip_status_before) {

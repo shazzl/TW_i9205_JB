@@ -13,7 +13,7 @@
 #define DEBUG
 
 #include <mach/socinfo.h>
-
+#include <linux/lcd.h>
 #include "msm_fb.h"
 #include <linux/gpio.h>
 #include "mipi_dsi.h"
@@ -24,6 +24,7 @@
 #elif defined(CONFIG_MDNIE_LITE_TUNING)
 #include "mdnie_lite_tuning.h"
 #endif
+#define HX8389B_PANEL_LMS579NF02	0x538890
 
 //static struct msm_panel_common_pdata *mipi_hx8389b_pdata;
 static struct dsi_buf hx8389b_tx_buf;
@@ -126,7 +127,11 @@ static char cmd16[] = {
 };
 static char cmd17[] = {
 	0x55,
+#if defined(CONFIG_MACH_CRATER_CHN_CTC)
+	0x00	/*default CABC OFF*/
+#else
 	0x01
+#endif
 };
 
 static struct dsi_cmd_desc hx8389b_video_display_on_cmds[] = {
@@ -205,7 +210,7 @@ static int mipi_hx8389b_lcd_off(struct platform_device *pdev)
 
 	mipi  = &mfd->panel_info.mipi;
 
-	printk("KERN_ERR [LCD] mipi_hx8389b_lcd_off\n");
+	printk(KERN_ERR "[LCD] mipi_hx8389b_lcd_off\n");
 	if (mipi->mode == DSI_VIDEO_MODE)
 		mipi_dsi_cmds_tx(&hx8389b_tx_buf,
 			hx8389b_video_display_off_cmds,
@@ -216,6 +221,20 @@ static int mipi_hx8389b_lcd_off(struct platform_device *pdev)
 #endif
 	return 0;
 }
+
+#if defined(CONFIG_LCD_CLASS_DEVICE)
+static struct lcd_ops mipi_lcd_props;
+static ssize_t mipi_hx8389b_lcdtype_show(struct device *dev,
+			struct device_attribute *attr, char *buf)
+{
+	char temp[30];
+	sprintf(temp, "INH_%x\n", HX8389B_PANEL_LMS579NF02);
+	strcat(buf, temp);
+	return strlen(buf);
+}
+
+static DEVICE_ATTR(lcd_type, S_IRUGO, mipi_hx8389b_lcdtype_show, NULL);
+#endif
 
 static ssize_t mipi_hx8389b_wta_bl_ctrl(struct device *dev,
 	struct device_attribute *attr, const char *buf, size_t count)
@@ -274,6 +293,10 @@ static int mipi_hx8389b_create_sysfs(struct platform_device *pdev)
 static int __devinit mipi_hx8389b_lcd_probe(struct platform_device *pdev)
 {
 	struct platform_device *pthisdev = NULL;
+#if defined(CONFIG_LCD_CLASS_DEVICE)
+	struct lcd_device *lcd_device;
+	int ret;
+#endif
 	pr_debug("%s\n", __func__);
 
 	if (pdev->id == 0) {
@@ -290,10 +313,28 @@ static int __devinit mipi_hx8389b_lcd_probe(struct platform_device *pdev)
 	pthisdev = msm_fb_add_device(pdev);
 	mipi_hx8389b_create_sysfs(pthisdev);
 
-#if defined(CONFIG_MDNIE_LITE_TUNING) \
-	|| defined(CONFIG_FB_MDP4_ENHANCE)
+#if defined(CONFIG_MDNIE_LITE_TUNING) || defined(CONFIG_FB_MDP4_ENHANCE)
 	/*	mdnie sysfs create */
 	init_mdnie_class();
+#endif
+
+#if defined(CONFIG_LCD_CLASS_DEVICE)
+	lcd_device = lcd_device_register("panel", &pdev->dev, NULL,
+					&mipi_lcd_props);
+
+	if (IS_ERR(lcd_device)) {
+		int ret = PTR_ERR(lcd_device);
+		printk(KERN_ERR "lcd : failed to register device\n");
+		return ret;
+	}
+
+	ret = sysfs_create_file(&lcd_device->dev.kobj,
+					&dev_attr_lcd_type.attr);
+	if (ret) {
+		pr_info("sysfs create fail-%s\n",
+				dev_attr_lcd_type.attr.name);
+	}
+
 #endif
 
 	return 0;
@@ -307,6 +348,51 @@ static struct platform_driver this_driver = {
 };
 
 #if defined(CONFIG_BACKLIGHT_IC_KTD3102)
+#if defined(CONFIG_BL_CTRL_MODE_2)
+struct brt_value brt_table_aat[] = {
+	{	255 ,	7	},	/*Max 255*/
+	{	239 ,	8	},	
+	{	223 ,	9	},	
+	{	207 ,	10	},	
+	{	191 ,	11	},	
+	{	175 ,	12	},	
+	{	159 ,	13	},	
+	{	143 ,	14	},	
+	{	127 ,	15	},	/*Default 127*/
+	{	114 ,	17	},	
+	{	102 ,	19	},	
+	{	90	,	21	},	
+	{	78	,	23	},	
+	{	66	,	25	},	
+	{	54	,	27	},	
+	{	42	,	29	},	
+	{	30	,	31	},	/*Dim 30 Min 10*/
+	{	0	,	32	},	/*Off*/
+};
+#define MAX_BRT_STAGE (int)(sizeof(brt_table_aat)/sizeof(struct brt_value))
+static int mipi_hx8389b_set_brightness_level(int level)
+{
+	int tune_level = 0;
+
+	if (level > 0) {
+		if (level < MIN_BRIGHTNESS_VALUE) {
+			tune_level = AAT_DIMMING_VALUE; /* DIMMING */
+		} else {
+			int i;
+
+			for (i = 0; i < MAX_BRT_STAGE; i++) {
+				if (level <= brt_table_aat[i].level
+					&& level > brt_table_aat[i+1].level) {
+					tune_level = brt_table_aat[i].tune_level;
+					break;
+				}
+			}
+		}
+	} 
+	return tune_level;
+}
+#else
+
 static int lux_tbl[] = {
 	2,
 	5, 7, 9, 10, 11, 13, 14, 15, 16,17,
@@ -382,12 +468,13 @@ static int mipi_hx8389b_set_brightness_level(int bl_level)
 		case 200 ... 209:
 			backlightlevel = 6 ;  /* 13 */
 			break;
-		case 210 ... 219:
+		case 210 ... 214:
 			backlightlevel = 5;  /* 11 */
 			break;
-		case 220 ... 229:
+		case 215 ... 255:
 			backlightlevel = 3;  /* 9 */
 			break;
+#if 0
 		case 230 ... 239:
 			backlightlevel = 2;  /* 7 */
 			break;
@@ -397,6 +484,7 @@ static int mipi_hx8389b_set_brightness_level(int bl_level)
 		case 250 ... 255:
 			backlightlevel = 0;  /* 2 */
 			break;
+#endif
 		default:
 			backlightlevel = 23; /*32*/
 			break;
@@ -405,6 +493,7 @@ static int mipi_hx8389b_set_brightness_level(int bl_level)
 	cd = lux_tbl[backlightlevel];
 	return cd;
 }
+#endif
 
 void mipi_hx8389b_set_backlight(int level)
 {
@@ -415,7 +504,7 @@ void mipi_hx8389b_set_backlight(int level)
 	spin_lock(&bl_ctrl_lock);	
 	tune_level = level;
 
-	pr_debug("[KTD3102] tune_level : %d, lcd_brightness : %d \n",tune_level,lcd_brightness);	
+	//pr_debug("[KTD3102] tune_level : %d, lcd_brightness : %d \n",tune_level,lcd_brightness);	
 	if(tune_level != lcd_brightness)
 	{
 		if (!tune_level) {
@@ -428,19 +517,26 @@ void mipi_hx8389b_set_backlight(int level)
 				int val = gpio_get_value(DISP_BL_CONT_GPIO);
 				if (val) {
 					lcd_brightness = 0;
-				gpio_set_value(DISP_BL_CONT_GPIO, 0);
-				mdelay(3);
+					gpio_set_value(DISP_BL_CONT_GPIO, 0);
+					mdelay(3);
 					pr_info("LCD Baklight init in boot time on kernel\n");
 				}
 			}
 			if (!lcd_brightness) {
 				gpio_set_value(DISP_BL_CONT_GPIO, 1);
 				udelay(3);
+				
+#if defined(CONFIG_BL_CTRL_MODE_2)
+				lcd_brightness = MAX_BRIGHTNESS_IN_BLU;
+#else
 				lcd_brightness = 1;
+#endif
 			}
 
 			pulse = (tune_level - lcd_brightness + MAX_BRIGHTNESS_IN_BLU)
 							% MAX_BRIGHTNESS_IN_BLU;
+
+			pr_debug("[KTD3102] tune_level: %d, pulse : %d, lcd_brightness : %d \n",tune_level,pulse,lcd_brightness); 
 
 			for (; pulse > 0; pulse--) {
 				gpio_set_value(DISP_BL_CONT_GPIO, 0);

@@ -671,4 +671,62 @@ static const u16 sr030pc50_320x240[] = {
 0x3002,
 0x3180,
 };
+
+static const u16 sr030pc50_flip_off_No15fps[] = {
+0x0300,
+0x1194, /*0x91 : mirror mode*/
+};
+
+static const u16 sr030pc50_flip_off[] = {
+0x0300,
+0x1190, /*0x91 : mirror mode*/
+};
+
+static const u16 sr030pc50_hflip_No15fps[] = {
+0x0300,
+0x1195, /*0x91 : mirror mode*/
+};
+
+static const u16 sr030pc50_hflip[] = {
+0x0300,
+0x1191, /*0x91 : mirror mode*/
+};
+
+/* Effect Setting */
+static const u16 sr030pc50_effect_none[] = {
+0x0310, /*Page 10 <Effect> */
+0x1103, /*0x03 default <Color Space | Color interpolation> */
+0x1210, /*0x30 default <AutoBright | Yoffset> */
+0x1302, /*0x02 default <Contrast effect> */
+0x4080, /*0x80 Y_offset X 1 */
+0x4480, /*0x80 def cb contrast */
+0x4580, /*0x80 def cr contrast */
+};
+static const u16 sr030pc50_effect_gray[] = {
+0x0310, /*Page 10 <Effect> */
+0x1103, /*Effect control  0x03 default */
+0x1213, /*0x30 default ->0x33 UV Constant */
+0x1302, /*0x02 default <Contrast effect> */
+0x4080, /*0x80 Y_offset X 1 */
+0x4480, /*Cb constant */
+0x4580, /*Cr constant */
+};
+static const u16 sr030pc50_effect_sepia[] = {
+0x0310, /*Page 10 <Effect> */
+0x1103, /*Effect control  0x03 default */
+0x1213, /*0x30 default ->0x33 UV Constant */
+0x1302, /*0x02 default <Contrast effect> */
+0x4080, /*0x80 Y_offset X 1 */
+0x4470, /*Cb constant */
+0x4598, /*Cr constant */
+};
+static const u16 sr030pc50_effect_negative[] = {
+0x0310, /*Page 10 <Effect> */
+0x1103, /*0x03 default <Color Space | Color interpolation> */
+0x1218, /*0x30 default <AutoBright | Yoffset | Negative > */
+0x1302, /*0x02 default <Contrast effect> */
+0x4080, /*0x80 Y_offset X 1 */
+0x4480, /*Cb constant */
+0x4580, /*Cr constant */
+};
 #endif

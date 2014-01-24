@@ -2995,6 +2995,9 @@ static struct gpio_keys_button gpio_keys_button[] = {
 		.wakeup			= 0,
 		.debounce_interval	= 5, /* ms */
 		.desc			= "Vol Up",
+#if defined(CONFIG_KEYBOARD_GPIO_EXTENDED_RESUME_EVENT)
+		.support_evt		= NOT_SUPPORT_RESUME_KEY_EVENT,
+#endif
 	},
 	{
 		.code			= KEY_VOLUMEDOWN,
@@ -3004,6 +3007,9 @@ static struct gpio_keys_button gpio_keys_button[] = {
 		.wakeup			= 0,
 		.debounce_interval	= 5, /* ms */
 		.desc			= "Vol Down",
+#if defined(CONFIG_KEYBOARD_GPIO_EXTENDED_RESUME_EVENT)
+		.support_evt		= NOT_SUPPORT_RESUME_KEY_EVENT,
+#endif
 	},
 	{
 		.code			= KEY_HOMEPAGE,
@@ -3013,6 +3019,9 @@ static struct gpio_keys_button gpio_keys_button[] = {
 		.wakeup			= 1,
 		.debounce_interval	= 5, /* ms */
 		.desc			= "Home",
+#if defined(CONFIG_KEYBOARD_GPIO_EXTENDED_RESUME_EVENT)
+		.support_evt		= SUPPORT_RESUME_KEY_EVENT,
+#endif
 	},
 };
 static struct gpio_keys_platform_data gpio_keys_platform_data = {

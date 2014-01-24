@@ -261,10 +261,6 @@ static int ssp_probe(struct i2c_client *client,
 	data->set_prox_light_power = pdata->set_prox_light_power;
 	data->sensor_power_on_vdd = pdata->sensor_power_on_vdd;
 	data->set_prox_led_power = pdata->set_prox_led_power;
-	pdata->set_prox_light_power(1);
-	pdata->sensor_power_on_vdd(1,1);
-
-	mdelay(600);
 
 	/* AP system_rev */
 	if (pdata->check_ap_rev)

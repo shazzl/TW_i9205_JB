@@ -2966,7 +2966,7 @@ static ssize_t menu_sensitivity_show(struct device *dev,
 	}
 	misc_touch_dev->work_proceedure = TS_SET_MODE;
 
-	ret = ts_read_data(misc_touch_dev->client, ZINITIX_BTN_WIDTH + 0,
+	ret = ts_read_data(misc_touch_dev->client, ZINITIX_BTN_WIDTH + 1,
 		(u8*)&val, 2);
 
 	if (ret < 0) {
@@ -2980,7 +2980,7 @@ static ssize_t menu_sensitivity_show(struct device *dev,
 	enable_irq(misc_touch_dev->irq);
 	up(&misc_touch_dev->work_proceedure_lock);
 
-	sprintf(buf, "%d\n", val);
+	return sprintf(buf, "%d\n", val);
 
 err_out:
 	return sprintf(buf, "%s", "abnormal");
@@ -3003,7 +3003,7 @@ static ssize_t back_sensitivity_show(struct device *dev,
 	}
 	misc_touch_dev->work_proceedure = TS_SET_MODE;
 
-	ret = ts_read_data(misc_touch_dev->client, ZINITIX_BTN_WIDTH + 1,
+	ret = ts_read_data(misc_touch_dev->client, ZINITIX_BTN_WIDTH + 4,
 		(u8*)&val, 2);
 
 	if (ret < 0) {

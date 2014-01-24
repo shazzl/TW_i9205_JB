@@ -35,7 +35,7 @@
 #define GPIO_VT_CAM_MCLK			4
 #define GPIO_CAM_MCLK			5
 #if defined(CONFIG_MACH_LT02_CHN_CTC)
-#define GPIO_CAM_SENSOR_CORE_EN			47
+#define GPIO_CAM_SENSOR_CORE_EN			144
 #define GPIO_BATT_INT			78
 #else
 #define GPIO_CAM_SENSOR_CORE_EN			6
@@ -57,11 +57,11 @@
 #if defined(CONFIG_MACH_LT02_CHN_CTC)
 #define GPIO_TOUCH_SDA			16
 #define GPIO_TOUCH_SCL			17
-#else
-#define GPIO_TSP_SDA_1_8V			16
-#define GPIO_TSP_SCL_1_8V			17
+#define GPIO_TOUCH_IRQ			18
+//#define GPIO_TSP_SDA_1_8V			16
+//#define GPIO_TSP_SCL_1_8V			17
 #endif
-#define GPIO_VT_CAM_ID			18
+//#define GPIO_VT_CAM_ID			18
 #if defined(CONFIG_GSM_MODEM_SPRD6500)
 #define GPIO_PHONE_ACTIVE			19
 #endif
@@ -97,10 +97,10 @@
 #define GPIO_MSM8930_40			40
 #define GPIO_MSM8930_41			41
 #if defined(CONFIG_MACH_LT02_CHN_CTC)
-#define GPIO_IMA_I2C_SDA			6
-#define GPIO_IMA_I2C_SCL			7
-#define GPIO_S_LED_I2C_SDA		6   // Use same line(IrDA)
-#define GPIO_S_LED_I2C_SCL			7   // Use same line(IrDA)
+#define GPIO_IMA_I2C_SDA			144
+#define GPIO_IMA_I2C_SCL			144
+#define GPIO_S_LED_I2C_SDA		144   // Use same line(IrDA)
+#define GPIO_S_LED_I2C_SCL			144   // Use same line(IrDA)
 #else
 #define GPIO_S_LED_I2C_SDA			42   // Use same line(IrDA)
 #define GPIO_S_LED_I2C_SCL			43   // Use same line(IrDA)
@@ -153,7 +153,7 @@
 #define GPIO_CAM_SENSOR_EN			64 // system_rev >= 0x07
 #endif
 #define GPIO_T_FLASH_DETECT			65
-#define GPIO_TSP_INT			66
+//#define GPIO_TSP_INT			66
 #define GPIO_GYRO_INT_N			67
 #define GPIO_FPGA_RST_N			68
 #define GPIO_CODEC_INT			69
@@ -183,7 +183,7 @@
 #define GPIO_MHL_WAKE_UP			77
 #define GPIO_MHL_INT			78
 #define GPIO_MSM8930_79			79
-#define GPIO_NFC_EN			80
+#define GPIO_NFC_EN			144
 #define GPIO_VOL_DOWN			81
 #define GPIO_TA_nCHG			82
 #define GPIO_BT_SSBI			83
@@ -396,11 +396,7 @@
 #define GPIO_PM_TDMB_ANT_DET		GPIO_PM_NC28
 #else /* EUR_OPEN, EUR_LTE, ATT, TMO, USC...*/
 #define GPIO_FM_RST			GPIO_MSM8930_10
-#if defined(CONFIG_MACH_LT02_CHN_CTC)
-#define GPIO_TOUCH_IRQ			GPIO_MSM8930_11
-#else
 #define GPIO_FM_INT			GPIO_MSM8930_11
-#endif
 #if defined(CONFIG_MACH_LT02_CHN_CTC)
 #define GPIO_IRDA_SDA			135
 #define GPIO_IRDA_SCL			136

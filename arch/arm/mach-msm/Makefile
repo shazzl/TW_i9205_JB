@@ -288,6 +288,7 @@ obj-$(CONFIG_MACH_MSM8930_FLUID) += board-8930-all.o board-8930-regulator-pm8038
 obj-$(CONFIG_MACH_MSM8930_EVT) += board-8930-all.o board-8930-regulator-pm8038.o board-8930-regulator-pm8917.o
 ####### SS Prject ADDED #######
 obj-$(CONFIG_MACH_EXPRESS2) += board-express2.o board-8930-camera-power.o board-8930-camera.o board-8930-display.o board-8930-pmic.o board-8930-storage.o board-express2-gpiomux.o devices-8930.o board-8930-gpu.o board-8930-regulator-pm8038.o board-8930-regulator-pm8917.o board-8930-input-mxt.o board-8930-input-tkey.o
+obj-$(CONFIG_MACH_EXPRESS) += board-express.o board-8930-camera-power.o board-8930-camera.o board-8930-display.o board-8930-pmic.o board-8930-storage.o board-express-gpiomux.o devices-8930.o board-8930-gpu.o board-8930-regulator-pm8038.o board-8930-regulator-pm8917.o board-8930-input-mxt.o board-8930-input-tkey.o
 obj-$(CONFIG_MACH_HIGGS) += board-higgs.o board-8930-camera-power.o board-8930-camera.o board-8930-display.o board-8930-pmic.o board-8930-storage.o board-higgs-gpiomux.o devices-8930.o board-8930-gpu.o board-8930-regulator-pm8038.o board-8930-regulator-pm8917.o board-8930-input-mms.o
 obj-$(CONFIG_MACH_SERRANO) += board-serrano.o board-8930-camera-power.o board-8930-camera.o board-8930-display.o board-8930-pmic.o board-8930-storage.o board-serrano-gpiomux.o devices-8930.o board-8930-gpu.o board-8930-regulator-pm8038.o board-8930-regulator-pm8917.o board-8930-input-mxt.o board-8930-input-tkey.o
 obj-$(CONFIG_MACH_CRATER) += board-crater.o board-8930-camera-power.o board-8930-camera.o board-8930-display.o board-8930-pmic.o board-8930-storage.o board-crater-gpiomux.o devices-8930.o board-8930-gpu.o board-8930-regulator-pm8038.o board-8930-regulator-pm8917.o board-8930-input-mxt.o board-8930-input-tkey.o
@@ -300,7 +301,11 @@ obj-$(CONFIG_MACH_MELIUS) += board-melius.o board-8930-camera-power.o board-8930
 endif
 obj-$(CONFIG_MACH_KS02) += board-ks02.o board-8930-camera-power.o board-8930-camera.o board-8930-display.o board-8930-pmic.o board-8930-storage.o board-ks02-gpiomux.o devices-8930.o board-8930-gpu.o board-8930-regulator-pm8038.o board-ks02-8930-regulator-pm8917.o board-ks02-input-mxt.o board-8930-input-tkey.o board-ks02-wlan.o board-ks02-battery.o
 obj-$(CONFIG_MACH_GOLDEN) += board-golden.o board-8930-camera-power.o board-8930-camera.o board-8930-display.o board-8930-pmic.o board-8930-storage.o board-golden-gpiomux.o devices-8930.o board-8930-gpu.o board-8930-regulator-pm8038.o board-8930-regulator-pm8917.o board-8930-input-mxt.o board-8930-input-tkey.o
+ifdef CONFIG_MACH_LT02_CHN_CTC
+obj-$(CONFIG_MACH_LT02) += board-lt02.o board-8930-camera-power.o board-8930-camera.o board-8930-display.o board-8930-pmic.o board-8930-storage.o board-lt02-gpiomux.o devices-8930.o board-8930-gpu.o board-8930-regulator-pm8038.o board-8930-regulator-pm8917.o board-8930-input-zinitix.o board-lt02ctc-battery.o
+else
 obj-$(CONFIG_MACH_LT02) += board-lt02.o board-8930-camera-power.o board-8930-camera.o board-8930-display.o board-8930-pmic.o board-8930-storage.o board-lt02-gpiomux.o devices-8930.o board-8930-gpu.o board-8930-regulator-pm8038.o board-8930-regulator-pm8917.o board-8930-input-zinitix.o board-lt02-battery.o
+endif
 obj-$(CONFIG_MACH_BISCOTTO) += board-biscotto.o board-8930-camera-power.o board-8930-camera.o board-8930-display.o board-8930-pmic.o board-8930-storage.o board-biscotto-gpiomux.o devices-8930.o board-8930-gpu.o board-8930-regulator-pm8038.o board-8930-regulator-pm8917.o board-biscotto-battery.o
 obj-$(CONFIG_MACH_CANE) += board-cane.o board-8930-camera-power.o board-8930-camera.o board-8930-display.o board-8930-pmic.o board-8930-storage.o board-cane-gpiomux.o devices-8930.o board-8930-gpu.o board-8930-regulator-pm8038.o board-8930-regulator-pm8917.o board-8930-input-mxt.o board-8930-input-tkey.o
 #######   END           #######
@@ -324,6 +329,9 @@ endif
 ifdef CONFIG_MACH_BAFFIN
 	obj-$(CONFIG_CHARGER_SMB358) += board-baffin-battery.o	
 	obj-$(CONFIG_PM8921_BMS) += bms-batterydata-baffin.o
+endif
+ifdef CONFIG_MACH_EXPRESS
+	obj-$(CONFIG_PM8921_BMS) += bms-batterydata-express.o
 endif
 ifdef CONFIG_MACH_EXPRESS2
 	obj-$(CONFIG_PM8921_BMS) += bms-batterydata-express2.o

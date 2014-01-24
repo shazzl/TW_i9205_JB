@@ -153,6 +153,9 @@ static bool sec_fg_gpio_init(void)
 	gpio_tlmm_config(GPIO_CFG(gpio_i2c_data_fgchg.scl_pin, 0,
 			GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA), 1);
 
+	gpio_tlmm_config(GPIO_CFG(GPIO_FUEL_INT, 0,
+			GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA), 1);
+
 	/* FUEL_ALERT Setting */
 	pr_info("%s:system_rev (%d)\n",__func__, system_rev);
 
@@ -449,10 +452,10 @@ static int polling_time_table[] = {
 static struct battery_data_t melius_battery_data[] = {
 	/* SDI battery data (High voltage 4.35V) */
 	{
-		.RCOMP0 = 0x62,
-		.RCOMP_charging = 0x62,
-		.temp_cohot = -85,
-		.temp_cocold = -4200,
+		.RCOMP0 = 0x58,
+		.RCOMP_charging = 0x58,
+		.temp_cohot = -775,
+		.temp_cocold = -4375,
 		.is_using_model_data = true,
 		.type_str = "SDI",
 	}
@@ -567,23 +570,22 @@ sec_battery_platform_data_t sec_battery_pdata = {
 	.temp_check_type = SEC_BATTERY_TEMP_CHECK_TEMP,
 	.temp_check_count = 1,
 
-#if defined(CONFIG_MACH_MELIUS_SKT) || defined(CONFIG_MACH_MELIUS_KTT) || \
-	defined(CONFIG_MACH_MELIUS_LGT) || defined(CONFIG_MACH_KS02_SKT)
+#if defined(CONFIG_MACH_GOLDEN_ATT)
 	/* temporarily */
-	.temp_high_threshold_event = 600,
-	.temp_high_recovery_event = 400,
-	.temp_low_threshold_event = -210,
-	.temp_low_recovery_event = 0,
+	.temp_high_threshold_event = 630,
+	.temp_high_recovery_event = 425,
+	.temp_low_threshold_event = -40,
+	.temp_low_recovery_event = -10,
 
-	.temp_high_threshold_normal = 600,
-	.temp_high_recovery_normal = 400,
-	.temp_low_threshold_normal = -210,
-	.temp_low_recovery_normal = 0,
+	.temp_high_threshold_normal = 490,
+	.temp_high_recovery_normal = 425,
+	.temp_low_threshold_normal = -40,
+	.temp_low_recovery_normal = -10,
 
-	.temp_high_threshold_lpm = 600,
-	.temp_high_recovery_lpm = 400,
-	.temp_low_threshold_lpm = -210,
-	.temp_low_recovery_lpm = 0,
+	.temp_high_threshold_lpm = 490,
+	.temp_high_recovery_lpm = 425,
+	.temp_low_threshold_lpm = -40,
+	.temp_low_recovery_lpm = -10,
 #else
 	.temp_high_threshold_event = 600,
 	.temp_high_recovery_event = 400,

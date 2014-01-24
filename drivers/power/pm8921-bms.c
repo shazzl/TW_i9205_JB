@@ -170,6 +170,7 @@ struct pm8921_bms_chip {
 	int			ocv_dis_low_soc;
 	int			high_ocv_correction_limit_uv;
 	int			low_ocv_correction_limit_uv;
+	int			cutoff_ocv_correction_uv;
 	int			hold_soc_est;
 	int			prev_vbat_batt_terminal_uv;
 	unsigned int		hw_rev;
@@ -177,7 +178,8 @@ struct pm8921_bms_chip {
 	int			low_voltage_detect;
 	int			vbatt_cutoff_retries;
 	bool			first_report_after_suspend;
-	int			calc_soc_at_suspend;
+	bool			soc_updated_on_resume;
+	int			last_soc_at_suspend;
 };
 
 /*
@@ -1981,7 +1983,22 @@ static int adjust_soc(struct pm8921_bms_chip *chip, int soc,
 	delta_ocv_uv = div_s64((soc - soc_est) * (s64)m * 1000,
 							n * (pc - pc_new));
 
-	if (abs(delta_ocv_uv) > delta_ocv_uv_limit) {
+	if(chip->last_ocv_uv > 3800000)
+		correction_limit_uv = the_chip->high_ocv_correction_limit_uv;
+	else
+		correction_limit_uv = the_chip->low_ocv_correction_limit_uv;
+
+	delta_ocv_uv_limit = min(delta_ocv_uv_limit, correction_limit_uv);
+
+	if (vbat_uv <= chip->v_cutoff * 1000) {
+		/*
+		 * vbat has fallen below the cutoff voltage.
+		 * force the OCV down very fast in order to avoid UVLOing
+		 */
+		delta_ocv_uv = chip->cutoff_ocv_correction_uv;
+		pr_debug("vbat below cutoff (%d uv), forcing delta_ocv to %d\n",
+				vbat_uv, delta_ocv_uv);
+	} else if (abs(delta_ocv_uv) > delta_ocv_uv_limit) {
 		pr_debug("limiting delta ocv %d limit = %d\n", delta_ocv_uv,
 				delta_ocv_uv_limit);
 
@@ -1989,22 +2006,6 @@ static int adjust_soc(struct pm8921_bms_chip *chip, int soc,
 			delta_ocv_uv = delta_ocv_uv_limit;
 		else
 			delta_ocv_uv = -1 * delta_ocv_uv_limit;
-		pr_debug("new delta ocv = %d\n", delta_ocv_uv);
-	}
-
-	if(chip->last_ocv_uv > 3800000)
-		correction_limit_uv = the_chip->high_ocv_correction_limit_uv;
-	else
-		correction_limit_uv = the_chip->low_ocv_correction_limit_uv;
-
-	if (abs(delta_ocv_uv) > correction_limit_uv) {
-		pr_debug("limiting delta ocv %d limit = %d\n", delta_ocv_uv,
-				correction_limit_uv);
-
-		if (delta_ocv_uv > 0)
-			delta_ocv_uv = correction_limit_uv;
-		else
-			delta_ocv_uv = -1 * correction_limit_uv;
 		pr_debug("new delta ocv = %d\n", delta_ocv_uv);
 	}
 
@@ -2169,6 +2170,9 @@ static bool is_shutdown_soc_within_limits(struct pm8921_bms_chip *chip, int soc)
 		pr_debug("NOT forcing shutdown soc = %d\n", chip->shutdown_soc);
 		return 0;
 	}
+
+	if (is_warm_restart(chip))
+		return 1;
 
 	if (abs(chip->shutdown_soc - soc) > chip->shutdown_soc_valid_limit) {
 		pr_info("rejecting shutdown soc = %d, soc = %d limit = %d\n",
@@ -2415,10 +2419,11 @@ static int calculate_state_of_charge(struct pm8921_bms_chip *chip,
 			rbatt, fcc_uah, unusable_charge_uah, cc_uah);
 
 	pr_info("calculated SOC = %d\n", new_calculated_soc);
-	if (new_calculated_soc != calculated_soc)
+	if (new_calculated_soc != calculated_soc) {
+		calculated_soc = new_calculated_soc;
 		update_power_supply(chip);
+	}
 
-	calculated_soc = new_calculated_soc;
 	firsttime = 0;
 	get_current_time(&chip->last_recalc_time);
 
@@ -2526,30 +2531,28 @@ static int report_state_of_charge(struct pm8921_bms_chip *chip)
 	if (last_soc != -EINVAL && last_soc < soc && soc != 100)
 		soc = scale_soc_while_chg(chip, delta_time_us, soc, last_soc);
 
-	/* restrict soc to 1% change unless reporting 1st time after suspend */
-	if (chip->first_report_after_suspend == true) {
-		chip->first_report_after_suspend = false;
-		if (last_soc != -EINVAL) {
-			if (last_soc < soc)
+	if (last_soc != -EINVAL) {
+		if (chip->first_report_after_suspend) {
+			chip->first_report_after_suspend = false;
+			if (chip->soc_updated_on_resume) {
+				/*  coming here after a long suspend */
+				chip->soc_updated_on_resume = false;
+				if (last_soc < soc)
+					/* if soc has falsely increased during
+					   * suspend, set the soc_at_suspend
+					   */
+					soc = chip->last_soc_at_suspend;
+			} else {
 				/*
-				 * can't suspend while charging
-				 * don't report the increased the soc
+				 * suspended for a short time
+				 * report the last_soc before suspend
 				 */
-				soc = last_soc;
-			else if (last_soc > soc) {
-				if (chip->calc_soc_at_suspend > soc)
-					soc = last_soc -
-					(chip->calc_soc_at_suspend - soc);
-				else
-					soc = last_soc;
+				soc = chip->last_soc_at_suspend;
 			}
-		}
-	} else {
-		if (last_soc != -EINVAL) {
-			if (soc < last_soc && soc != 0)
-				soc = last_soc - 1;
-			if (soc > last_soc && soc != 100)
-				soc = last_soc + 1;
+		} else if (soc < last_soc && soc != 0) {
+			soc = last_soc - 1;
+		} else if (soc > last_soc && soc != 100) {
+			soc = last_soc + 1;
 		}
 	}
 
@@ -3566,6 +3569,7 @@ static int __devinit pm8921_bms_probe(struct platform_device *pdev)
 
 	chip->high_ocv_correction_limit_uv = pdata->high_ocv_correction_limit_uv;
 	chip->low_ocv_correction_limit_uv = pdata->low_ocv_correction_limit_uv;
+	chip->cutoff_ocv_correction_uv = pdata->cutoff_ocv_correction_uv;
 	chip->hold_soc_est = pdata->hold_soc_est;
 
 	chip->alarm_low_mv = pdata->alarm_low_mv;
@@ -3661,9 +3665,11 @@ static int __devexit pm8921_bms_remove(struct platform_device *pdev)
 
 static int pm8921_bms_suspend(struct device *dev)
 {
+	struct pm8921_bms_chip *chip = dev_get_drvdata(dev);
 
-	the_chip->first_report_after_suspend = true;
-	the_chip->calc_soc_at_suspend = calculated_soc;
+	cancel_delayed_work_sync(&chip->calculate_soc_delayed_work);
+
+	chip->last_soc_at_suspend = last_soc;
 	return 0;
 }
 
@@ -3672,22 +3678,30 @@ static int pm8921_bms_resume(struct device *dev)
 	int rc;
 	unsigned long time_since_last_recalc;
 	unsigned long tm_now_sec;
+	struct pm8921_bms_chip *chip = dev_get_drvdata(dev);
 
 	rc = get_current_time(&tm_now_sec);
 	if (rc) {
 		pr_err("Could not read current time: %d\n", rc);
 		return 0;
 	}
-	if (tm_now_sec > the_chip->last_recalc_time) {
+
+	if (tm_now_sec > chip->last_recalc_time) {
 		time_since_last_recalc = tm_now_sec -
-				the_chip->last_recalc_time;
+			chip->last_recalc_time;
 		pr_debug("Time since last recalc: %lu\n",
 				time_since_last_recalc);
-		if (time_since_last_recalc >= the_chip->soc_calc_period) {
-			the_chip->last_recalc_time = tm_now_sec;
-			recalculate_soc(the_chip);
+		if ((time_since_last_recalc * 1000) >=
+				chip->soc_calc_period) {
+			chip->last_recalc_time = tm_now_sec;
+			recalculate_soc(chip);
+			chip->soc_updated_on_resume = true;
 		}
 	}
+	chip->first_report_after_suspend = true;
+	update_power_supply(chip);
+	schedule_delayed_work(&chip->calculate_soc_delayed_work,
+			msecs_to_jiffies(chip->soc_calc_period));
 
 	return 0;
 }

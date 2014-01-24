@@ -259,12 +259,21 @@ static struct gpiomux_setting hdmi_active_5_cfg = {
 #endif
 #endif
 
+#if defined(CONFIG_MACH_SERRANO_EUR_LTE) || defined(CONFIG_MACH_SERRANO_EUR_3G)
+static struct gpiomux_setting nc_cfg = {
+        .func = GPIOMUX_FUNC_GPIO,
+        .drv = GPIOMUX_DRV_2MA,
+        .pull = GPIOMUX_PULL_DOWN,
+};
+#endif 
+
 static struct gpiomux_setting sitar_reset = {
 	.func = GPIOMUX_FUNC_GPIO,
 	.drv = GPIOMUX_DRV_6MA,
 	.pull = GPIOMUX_PULL_NONE,
 	.dir = GPIOMUX_OUT_LOW,
 };
+
 #if defined(CONFIG_VIDEO_MHL_V2)
 static struct gpiomux_setting mhl_suspend_cfg = {
 	.func = GPIOMUX_FUNC_GPIO,
@@ -279,6 +288,97 @@ static struct gpiomux_setting mhl_active_1_cfg = {
 	.dir = GPIOMUX_OUT_LOW,
 };
 #endif
+
+
+#ifdef CONFIG_MACH_SERRANO_EUR_LTE
+static struct msm_gpiomux_config nc_configs[] __initdata = {
+	{
+                .gpio = 40,
+                .settings = {
+                        [GPIOMUX_SUSPENDED] = &nc_cfg,
+                },
+	},
+        {
+                .gpio = 41,
+                .settings = {
+                        [GPIOMUX_SUSPENDED] = &nc_cfg,
+                },
+        },
+        {
+                .gpio = 89,
+                .settings = {
+                        [GPIOMUX_SUSPENDED] = &nc_cfg,
+                },
+        },
+        {
+                .gpio = 90,
+                .settings = {
+                        [GPIOMUX_SUSPENDED] = &nc_cfg,
+                },
+        },
+};
+#endif
+#ifdef CONFIG_MACH_SERRANO_EUR_3G
+static struct msm_gpiomux_config nc_configs[] __initdata = {
+	{
+		.gpio = 40,
+		.settings = {
+			[GPIOMUX_SUSPENDED] = &nc_cfg,
+			[GPIOMUX_ACTIVE] = &nc_cfg,
+		},
+	},
+	{
+		.gpio = 41,
+		.settings = {
+			[GPIOMUX_SUSPENDED] = &nc_cfg,
+			[GPIOMUX_ACTIVE] = &nc_cfg,
+		},
+	},
+	{
+		.gpio = 48,
+		.settings = {
+			[GPIOMUX_SUSPENDED] = &nc_cfg,
+			[GPIOMUX_ACTIVE] = &nc_cfg,
+		},
+	},
+	{
+		.gpio = 89,
+		.settings = {
+			[GPIOMUX_SUSPENDED] = &nc_cfg,
+			[GPIOMUX_ACTIVE] = &nc_cfg,
+		},
+	},
+	{
+		.gpio = 92,
+		.settings = {
+			[GPIOMUX_SUSPENDED] = &nc_cfg,
+			[GPIOMUX_ACTIVE] = &nc_cfg,
+		},
+	},
+	{
+		.gpio = 95,
+		.settings = {
+			[GPIOMUX_SUSPENDED] = &nc_cfg,
+			[GPIOMUX_ACTIVE] = &nc_cfg,
+		},
+	},
+	{
+		.gpio = 96,
+		.settings = {
+			[GPIOMUX_SUSPENDED] = &nc_cfg,
+			[GPIOMUX_ACTIVE] = &nc_cfg,
+		},
+	},
+	{
+		.gpio = 106,
+		.settings = {
+			[GPIOMUX_SUSPENDED] = &nc_cfg,
+			[GPIOMUX_ACTIVE] = &nc_cfg,
+		},
+	},
+};
+#endif
+
 #if defined(CONFIG_KS8851) || defined(CONFIG_KS8851_MODULE)
 static struct msm_gpiomux_config msm8960_ethernet_configs[] = {
 	{
@@ -1142,6 +1242,10 @@ int __init msm8930_init_gpiomux(void)
 #if defined(CONFIG_MACH_CRATER)
 	msm_gpiomux_install(msm8930_sd_det_config,
 			ARRAY_SIZE(msm8930_sd_det_config));
+#endif
+
+#if defined(CONFIG_MACH_SERRANO_EUR_LTE) || defined(CONFIG_MACH_SERRANO_EUR_3G)
+	msm_gpiomux_install(nc_configs, ARRAY_SIZE(nc_configs));
 #endif
 
 	if (machine_is_msm8930_fluid() || machine_is_msm8930_mtp())

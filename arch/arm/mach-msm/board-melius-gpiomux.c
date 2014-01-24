@@ -361,13 +361,14 @@ static struct gpiomux_setting mhl_suspend_cfg = {
 	.drv = GPIOMUX_DRV_2MA,
 	.pull = GPIOMUX_PULL_DOWN,
 };
-
+#if !defined(CONFIG_MACH_CRATER_CHN_CTC)
 static struct gpiomux_setting mhl_active_1_cfg = {
 	.func = GPIOMUX_FUNC_GPIO,
 	.drv = GPIOMUX_DRV_2MA,
 	.pull = GPIOMUX_PULL_DOWN,
 	.dir = GPIOMUX_OUT_LOW,
 };
+#endif
 #endif
 
 #if defined(CONFIG_KS8851) || defined(CONFIG_KS8851_MODULE)
@@ -1253,6 +1254,7 @@ static struct msm_gpiomux_config msm8960_hdmi_configs[] __initdata = {
 #endif
 #if defined(CONFIG_VIDEO_MHL_V2)
 static struct msm_gpiomux_config msm8930_mhl_configs[] __initdata = {
+#if !defined (CONFIG_MACH_CRATER_CHN_CTC)
 	{
 		.gpio = GPIO_MHL_RST,
 		.settings = {
@@ -1260,6 +1262,8 @@ static struct msm_gpiomux_config msm8930_mhl_configs[] __initdata = {
 			[GPIOMUX_SUSPENDED] = &mhl_suspend_cfg,
 		},
 	},
+#endif	
+#if !defined (CONFIG_MACH_CRATER_CHN_CTC)
 	{
 		.gpio = GPIO_MHL_WAKE_UP,
 		.settings = {
@@ -1267,6 +1271,7 @@ static struct msm_gpiomux_config msm8930_mhl_configs[] __initdata = {
 			[GPIOMUX_SUSPENDED] = &mhl_suspend_cfg,
 		},
 	},
+#endif	
 	{
 		.gpio = GPIO_MHL_SDA,
 		.settings = {
@@ -1544,6 +1549,42 @@ static struct msm_gpiomux_config msm8x30_melius_05_gpio_configs[] __initdata = {
 	},
 };
 #endif
+
+#if defined(CONFIG_MACH_MELIUS_SPR)
+static struct msm_gpiomux_config msm8x30_melius_03_gpio_configs[] __initdata = {
+	{
+		.gpio		= 11, //NC
+		.settings = {
+			[GPIOMUX_ACTIVE]	= &gpio_input_pull_down_active_cfg,
+			[GPIOMUX_SUSPENDED] = &gpio_input_pull_down_suspend_cfg,
+		},
+	},
+	{
+		.gpio		= 15, //NC
+		.settings = {
+			[GPIOMUX_ACTIVE]	= &gpio_input_pull_down_active_cfg,
+			[GPIOMUX_SUSPENDED] = &gpio_input_pull_down_suspend_cfg,
+		},
+	},
+	{
+		.gpio		= 59, //NC
+		.settings = {
+			[GPIOMUX_ACTIVE]	= &gpio_input_pull_down_active_cfg,
+			[GPIOMUX_SUSPENDED] = &gpio_input_pull_down_suspend_cfg,
+		},
+	},
+	{
+		.gpio		= 82, //NC
+		.settings = {
+			[GPIOMUX_ACTIVE]	= &gpio_input_pull_down_active_cfg,
+			[GPIOMUX_SUSPENDED] = &gpio_input_pull_down_suspend_cfg,
+		},
+
+	},
+};
+#endif
+
+
 #endif
 
 struct melius_init_sleep_table {
@@ -1565,7 +1606,11 @@ static struct melius_init_sleep_table melius_init_sleep_table[] = {
 	GPIO_TABLE(msm8x30_melius_gpio_configs),
 	GPIO_TABLE_NULL,
 	GPIO_TABLE_NULL,
+#if defined (CONFIG_MACH_MELIUS_SPR)
+	GPIO_TABLE(msm8x30_melius_03_gpio_configs),
+#else
 	GPIO_TABLE_NULL,
+#endif	
 	GPIO_TABLE_NULL,
 	GPIO_TABLE_NULL,
 #if defined(CONFIG_MACH_MELIUS_EUR_LTE) || defined(CONFIG_MACH_MELIUS_EUR_OPEN)

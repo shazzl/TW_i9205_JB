@@ -140,17 +140,17 @@ static struct msm_mmc_slot_reg_data mmc_slot_vreg_data[MAX_SDCC_CONTROLLER] = {
 };
 
 /* SDC1 pad data */
-#if !defined(CONFIG_MACH_KS02)
-static struct msm_mmc_pad_drv sdc1_pad_drv_on_cfg[] = {
-	{TLMM_HDRV_SDC1_CLK, GPIO_CFG_16MA},
-	{TLMM_HDRV_SDC1_CMD, GPIO_CFG_10MA},
-	{TLMM_HDRV_SDC1_DATA, GPIO_CFG_10MA}
-};
-#else // KS02
+#if defined(CONFIG_MACH_KS02) || defined(CONFIG_MACH_SERRANO) //KS02,SERRANO
 static struct msm_mmc_pad_drv sdc1_pad_drv_on_cfg[] = {
 	{TLMM_HDRV_SDC1_CLK, GPIO_CFG_6MA},
 	{TLMM_HDRV_SDC1_CMD, GPIO_CFG_6MA},
 	{TLMM_HDRV_SDC1_DATA, GPIO_CFG_6MA}
+};
+#else // KS02
+static struct msm_mmc_pad_drv sdc1_pad_drv_on_cfg[] = {
+	{TLMM_HDRV_SDC1_CLK, GPIO_CFG_8MA},
+	{TLMM_HDRV_SDC1_CMD, GPIO_CFG_8MA},
+	{TLMM_HDRV_SDC1_DATA, GPIO_CFG_8MA}
 };
 #endif
 static struct msm_mmc_pad_drv sdc1_pad_drv_off_cfg[] = {
@@ -172,13 +172,13 @@ static struct msm_mmc_pad_pull sdc1_pad_pull_off_cfg[] = {
 };
 
 /* SDC3 pad data */
-#if !defined(CONFIG_MACH_KS02)
+#if !defined(CONFIG_MACH_KS02) && !defined(CONFIG_MACH_SERRANO)
 static struct msm_mmc_pad_drv sdc3_pad_drv_on_cfg[] = {
 	{TLMM_HDRV_SDC3_CLK, GPIO_CFG_8MA},
 	{TLMM_HDRV_SDC3_CMD, GPIO_CFG_8MA},
 	{TLMM_HDRV_SDC3_DATA, GPIO_CFG_8MA}
 };
-#else	// KS02
+#else	// KS02, SERRANO
 static struct msm_mmc_pad_drv sdc3_pad_drv_on_cfg[] = {
 	{TLMM_HDRV_SDC3_CLK, GPIO_CFG_12MA},
 	{TLMM_HDRV_SDC3_CMD, GPIO_CFG_8MA},
@@ -193,19 +193,11 @@ static struct msm_mmc_pad_drv sdc3_pad_drv_off_cfg[] = {
 	{TLMM_HDRV_SDC3_DATA, GPIO_CFG_2MA}
 };
 
-#if !defined(CONFIG_MACH_KS02)
 static struct msm_mmc_pad_pull sdc3_pad_pull_on_cfg[] = {
 	{TLMM_PULL_SDC3_CLK, GPIO_CFG_NO_PULL},
 	{TLMM_PULL_SDC3_CMD, GPIO_CFG_PULL_UP},
 	{TLMM_PULL_SDC3_DATA, GPIO_CFG_PULL_UP}
 };
-#else	// KS02
-static struct msm_mmc_pad_pull sdc3_pad_pull_on_cfg[] = {
-	{TLMM_PULL_SDC3_CLK, GPIO_CFG_NO_PULL},
-	{TLMM_PULL_SDC3_CMD, GPIO_CFG_NO_PULL},
-	{TLMM_PULL_SDC3_DATA, GPIO_CFG_NO_PULL}
-};
-#endif
 
 static struct msm_mmc_pad_pull sdc3_pad_pull_off_cfg[] = {
 	{TLMM_PULL_SDC3_CLK, GPIO_CFG_NO_PULL},
@@ -416,11 +408,11 @@ static struct mmc_platform_data msm8960_sdc3_data = {
 	.irq_flags	= IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,
 	.is_status_gpio_active_low = true,
 	.xpc_cap	= 1,
-#ifndef CONFIG_MACH_SERRANO
+/* Disable UHS feature
 	.uhs_caps	= (MMC_CAP_UHS_SDR12 | MMC_CAP_UHS_SDR25 |
 			MMC_CAP_UHS_SDR50 | MMC_CAP_UHS_DDR50 |
 			MMC_CAP_UHS_SDR104 | MMC_CAP_MAX_CURRENT_800),
-#endif
+*/
 	.mpm_sdiowakeup_int = MSM_MPM_PIN_SDC3_DAT1,
 	.msm_bus_voting_data = &sps_to_ddr_bus_voting_data,
 };

@@ -1633,7 +1633,7 @@ static int msm_fb_register(struct msm_fb_data_type *mfd)
 
 #ifdef CONFIG_FB_MSM_LOGO
 	/* Flip buffer */
-	if (load_565rle_image(INIT_IMAGE_FILE, bf_supported))
+	/*if (load_565rle_image(INIT_IMAGE_FILE, bf_supported))*/
 		draw_rgb888_screen();
 #endif
 	ret = 0;

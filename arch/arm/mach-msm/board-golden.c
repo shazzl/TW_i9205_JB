@@ -322,6 +322,12 @@ static void tsu6721_callback(enum cable_type_t cable_type, int attached)
 	int i, ret = 0;
 	struct power_supply *psy;
 
+	#if defined(CONFIG_TOUCHSCREEN_MXTS)
+        if (charger_callbacks && charger_callbacks->inform_charger)
+                charger_callbacks->inform_charger(charger_callbacks,
+                attached);
+	#endif
+
 	set_cable_status = attached ? cable_type : CABLE_TYPE_NONE;
 
 	switch (cable_type) {
@@ -345,6 +351,7 @@ static void tsu6721_callback(enum cable_type_t cable_type, int attached)
 	case CABLE_TYPE_CDP:
 		pr_info("%s USB CDP is %s\n",
 			__func__, attached ? "attached" : "detached");
+		sec_otg_set_vbus_state(attached);
 		break;
 	case CABLE_TYPE_OTG:
 		pr_info("%s OTG is %s\n",

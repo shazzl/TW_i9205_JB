@@ -78,9 +78,13 @@ Copyright (C) 2012, Samsung Electronics. All rights reserved.
 
 #define S6E88A_GRAY_SCALE_MAX 256
 
+#ifdef CONFIG_FB_MSM_MIPI_AMS367_OLED_VIDEO_WVGA_PT_PANEL
+/* 5.8*4194304 = 24326963.2 */
+#define S6E88A_VREG0_REF 24326963
+#else
 /*6.1*4194304 */
 #define S6E88A_VREG0_REF 25585254
-
+#endif
 
 /*V0,V1,V3,V11,V23,V35,V51,V87,V151,V203,V255*/
 #define S6E88A_MAX 11

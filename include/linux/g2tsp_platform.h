@@ -8,6 +8,11 @@
 #define G2_XREV			0x1	
 #define G2_YREV			0x2
 #define G2_FWDOWN		0x10
+#define G2_OLD_CHIP		0x20
+
+#define	IRQ_MODE_THREAD		0
+#define	IRQ_MODE_NORMAL		1
+#define	IRQ_MODE_POLLING	2
 
 struct g2tsp_keys_button {
     unsigned int code; 
@@ -25,7 +30,7 @@ struct g2tsp_platform_data {
 	void (*suspend)(void); 
 	void (*wakeup)(void);
 	int (*reset)(void);
-	int (*power)(int onoff); 
+	int (*power)(bool onoff); 
 
 	u32 gpio_scl;
 	u32 gpio_sda;
@@ -35,7 +40,8 @@ struct g2tsp_platform_data {
 
     char *name;
     u32 irq_gpio;
-	u32 irqmode;
+    u32 irq_flag;
+	u32 irq_mode;
 
 	u32 fw_version[2];
 	
@@ -43,3 +49,4 @@ struct g2tsp_platform_data {
 
 
 #endif //_G2TSP_H_
+

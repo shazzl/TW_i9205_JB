@@ -19,6 +19,10 @@
 #include <asm/backlight.h>
 #endif
 
+#if defined(CONFIG_MACH_BAFFINVETD_CHN_3G)
+#include <linux/gpio.h>
+#endif
+
 static const char *const backlight_types[] = {
 	[BACKLIGHT_RAW] = "raw",
 	[BACKLIGHT_PLATFORM] = "platform",
@@ -205,11 +209,29 @@ static ssize_t backlight_show_actual_brightness(struct device *dev,
 	return rc;
 }
 
-#if defined(CONFIG_MACH_CRATERTD_CHN_3G) || defined(CONFIG_MACH_BAFFINVETD_CHN_3G)
+#if defined(CONFIG_MACH_CRATERTD_CHN_3G)
 static ssize_t backlight_show_lcd_type(struct device *dev,
                              struct device_attribute *attr, char *buf)
 {
         char *lcd_type = "SDC_HX8389-B";
+
+        return sprintf(buf, "%s\n", lcd_type);
+}
+#elif defined(CONFIG_MACH_BAFFINVETD_CHN_3G)
+static ssize_t backlight_show_lcd_type(struct device *dev,
+                             struct device_attribute *attr, char *buf)
+{
+        int ret;
+        char *lcd_type;
+        ret = gpio_get_value(65);
+        if(ret)
+        {
+            lcd_type = "DTC_HX8369-B";
+        }
+        else
+        {
+            lcd_type = "SDC_HX8369-B";
+        }
 
         return sprintf(buf, "%s\n", lcd_type);
 }

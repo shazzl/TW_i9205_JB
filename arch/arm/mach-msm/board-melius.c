@@ -191,6 +191,11 @@ static struct platform_device msm_fm_platform_init = {
 #ifdef CONFIG_SEC_DEBUG
 #include <mach/sec_debug.h>
 #endif
+
+#ifdef CONFIG_PROC_AVC
+#include <linux/proc_avc.h>
+#endif
+
 #ifdef CONFIG_KS8851
 #define KS8851_RST_GPIO		89
 #define KS8851_IRQ_GPIO		90
@@ -326,7 +331,11 @@ static void max77693_haptic_power_onoff(int onoff)
 
 	if (!reg_l8) {
 		reg_l8 = regulator_get(NULL, "haptic_pwr");
-		ret = regulator_set_voltage(reg_l8, 3000000, 3000000);
+		#if defined(CONFIG_MACH_MELIUS_USC) || defined(CONFIG_MACH_MELIUS_SPR)
+			ret = regulator_set_voltage(reg_l8, 3300000, 3300000);
+		#else
+			ret = regulator_set_voltage(reg_l8, 3000000, 3000000);
+		#endif
 
 		if (IS_ERR(reg_l8)) {
 			printk(KERN_ERR"could not get haptic_pwr, rc = %ld\n",
@@ -740,6 +749,7 @@ static void tsu6721_mhl_cb(bool attached)
 
 static void msm8930_mhl_gpio_init(void)
 {
+#if !defined (CONFIG_MACH_CRATER_CHN_CTC)
 	int ret;
 	ret = gpio_request(GPIO_MHL_RST, "mhl_rst");
 	if (ret < 0) {
@@ -751,14 +761,17 @@ static void msm8930_mhl_gpio_init(void)
 		pr_err("mhl_en gpio_request is failed\n");
 		return;
 	}
+#endif
 }
 
 static void mhl_gpio_config(void)
 {
+#if !defined (CONFIG_MACH_CRATER_CHN_CTC)
 	gpio_tlmm_config(GPIO_CFG(GPIO_MHL_RST, 0, GPIO_CFG_OUTPUT,
 				GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA), 1);
 	gpio_tlmm_config(GPIO_CFG(GPIO_MHL_WAKE_UP, 0, GPIO_CFG_OUTPUT,
 				GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA), 1);
+#endif  
 }
 
 static struct i2c_gpio_platform_data mhl_i2c_gpio_data = {
@@ -847,16 +860,19 @@ static void sii9234_hw_onoff(bool onoff)
 			pr_err("error disabling regulator mhl_lvs7\n");
 
 		usleep_range(10000, 20000);
+#if !defined (CONFIG_MACH_CRATER_CHN_CTC)
 		if (gpio_direction_output(GPIO_MHL_RST, 0)) {
 			pr_err("%s error in making GPIO_MHL_RST Low\n"
 				, __func__);
 		}
+#endif    
 	}
 }
 
 static void sii9234_hw_reset(void)
 {
 	usleep_range(10000, 20000);
+#if !defined (CONFIG_MACH_CRATER_CHN_CTC)
 	if (gpio_direction_output(GPIO_MHL_RST, 1))
 		printk(KERN_ERR "%s error in making GPIO_MHL_RST HIGH\n",
 			 __func__);
@@ -870,6 +886,7 @@ static void sii9234_hw_reset(void)
 	if (gpio_direction_output(GPIO_MHL_RST, 1))
 		printk(KERN_ERR "%s error in making GPIO_MHL_RST HIGH\n",
 			 __func__);
+#endif  
 	msleep(30);
 }
 
@@ -4883,6 +4900,17 @@ static void __init register_i2c_devices(void)
 		msm8930_camera_board_info.num_i2c_board_info,
 	};
 #endif
+#ifdef CONFIG_MACH_CRATER_CHN_CTC
+	extern struct msm_camera_board_info msm8930_camera_sr200pc20m_board_info;
+
+	struct i2c_registry msm8930_camera_sr200pc20m_i2c_devices = {
+			MSM_8930_GSBI9_QUP_I2C_BUS_ID,
+			//SR200PC20M_I2C_BUS_ID,
+			msm8930_camera_sr200pc20m_board_info.board_info,
+			msm8930_camera_sr200pc20m_board_info.num_i2c_board_info,
+		};
+
+#endif
 
 #ifdef CONFIG_SAMSUNG_CMC624
 	struct i2c_registry cmc624_i2c_devices = {
@@ -4907,6 +4935,12 @@ static void __init register_i2c_devices(void)
 	i2c_register_board_info(cmc624_i2c_devices.bus,
 		cmc624_i2c_devices.info,
 		cmc624_i2c_devices.len);
+#endif
+#ifdef CONFIG_MACH_CRATER_CHN_CTC
+
+	i2c_register_board_info(msm8930_camera_sr200pc20m_i2c_devices.bus,
+		msm8930_camera_sr200pc20m_i2c_devices.info,
+		msm8930_camera_sr200pc20m_i2c_devices.len);
 #endif
 #endif
 }
@@ -5163,6 +5197,11 @@ void __init msm8930_melius_init(void)
 #ifdef CONFIG_SEC_DEBUG
 	sec_debug_init();
 #endif
+
+#ifdef CONFIG_PROC_AVC
+	sec_avc_log_init();
+#endif
+
 	if (socinfo_get_pmic_model() == PMIC_MODEL_PM8917)
 		msm8930_pm8917_pdata_fixup();
 	if (meminfo_init(SYS_MEMORY, SZ_256M) < 0)

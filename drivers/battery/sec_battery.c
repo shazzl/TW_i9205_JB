@@ -1122,6 +1122,7 @@ static void sec_bat_do_test_function(
 						POWER_SUPPLY_PROP_STATUS, value);
 				battery->status = value.intval;
 			}
+			break;
 		default:
 			pr_info("%s: error test: unknown state\n", __func__);
 			break;
@@ -2746,7 +2747,7 @@ no_cable_check:
 	return IRQ_HANDLED;
 }
 
-#if defined(CONFIG_MACH_MELIUS_CHN_CMCC) || defined(CONFIG_MACH_MELIUS_CHN_CTC)
+#if defined(CONFIG_MACH_MELIUS_CHN_CMCC) || defined(CONFIG_MACH_MELIUS_CHN_CTC) ||  defined(CONFIG_MACH_MELIUS_CHN_OPEN) ||  defined(CONFIG_MACH_MELIUS_ZH_LTE)
 static struct sec_battery_info *batt_info;
 
 void sec_battery_detect_switch(int on)
@@ -2937,7 +2938,7 @@ static int __devinit sec_battery_probe(struct platform_device *pdev)
 		goto err_supply_unreg_ac;
 	}
 
-#if defined(CONFIG_MACH_MELIUS_CHN_CMCC) || defined(CONFIG_MACH_MELIUS_CHN_CTC)
+#if defined(CONFIG_MACH_MELIUS_CHN_CMCC) || defined(CONFIG_MACH_MELIUS_CHN_CTC) ||  defined(CONFIG_MACH_MELIUS_CHN_OPEN) ||  defined(CONFIG_MACH_MELIUS_ZH_LTE)
 	batt_info = battery;
 #else
 	if (battery->pdata->bat_irq) {

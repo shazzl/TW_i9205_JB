@@ -18,7 +18,7 @@
 #ifndef ZINITIX_HEADER
 #define ZINITIX_HEADER
 
-#define TS_DRVIER_VERSION	"1.0.18"
+#define TS_DRVIER_VERSION	"1.0.21"
 
 #define	MULTI_PROTOCOL_TYPE_B	1
 
@@ -38,20 +38,21 @@
 #define SUPPORTED_BUTTON_NUM		2
 
 /* Upgrade Method*/
-#define TOUCH_ONESHOT_UPGRADE		0
+#define TOUCH_ONESHOT_UPGRADE		1
 /* if you use isp mode, you must add i2c device :
 name = "zinitix_isp" , addr 0x50*/
 
 /* resolution offset */
 #define ABS_PT_OFFSET			(-1)
 
-#define TOUCH_FORCE_UPGRADE		0
+#define TOUCH_FORCE_UPGRADE		1
 #define USE_CHECKSUM			1
 #define CHECK_HWID				0
 
 #define CHIP_OFF_DELAY			50	/*ms*/
 #define CHIP_ON_DELAY			15	/*ms*/
 #define FIRMWARE_ON_DELAY		20	/*ms*/
+
 
 #define DELAY_FOR_SIGNAL_DELAY		30	/*us*/
 #define DELAY_FOR_TRANSCATION		50
@@ -132,6 +133,8 @@ struct _reg_ioctl{
 
 #define ZINITIX_SENSITIVITY	0x0020
 
+#define	ZINITIX_I2C_CHECKSUM_WCNT	0x016a
+#define	ZINITIX_I2C_CHECKSUM_RESULT	0x016c
 
 #define ZINITIX_DEBUG_REG		0x0115	//0~7
 
@@ -175,12 +178,15 @@ struct _reg_ioctl{
 #define ZINITIX_PERIODICAL_INTERRUPT_INTERVAL	0x00f1
 
 #define ZINITIX_BTN_WIDTH		0x016d
+#define ZINITIX_BTN_SENSTIVITY		0x00b2
 
 #define ZINITIX_CHECKSUM_RESULT	0x012c
 
 #define ZINITIX_INIT_FLASH		0x01d0
 #define ZINITIX_WRITE_FLASH		0x01d1
 #define ZINITIX_READ_FLASH		0x01d2
+
+#define	ZINITIX_INTERNAL_FLAG_02 0x011e
 
 
 /* Interrupt & status register flag bit

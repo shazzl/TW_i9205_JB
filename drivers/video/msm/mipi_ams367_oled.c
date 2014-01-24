@@ -47,8 +47,8 @@ static int debug_str_pos;
 
 #if defined(CONFIG_RUNTIME_MIPI_CLK_CHANGE)
 static int current_fps;
+static int goal_fps = 0;
 #endif
-
 
 static uint32 mipi_samsung_manufacture_id(struct msm_fb_data_type *mfd)
 {
@@ -458,10 +458,6 @@ static int mipi_samsung_disp_on(struct platform_device *pdev)
 
 	mipi_samsung_disp_backlight_lock( mfd, false );
 
-#if defined(CONFIG_RUNTIME_MIPI_CLK_CHANGE)
-	current_fps = mfd->panel_info.mipi.frame_rate;
-#endif
-
 	return 0;
 }
 
@@ -505,7 +501,6 @@ static void mipi_samsung_disp_shutdown(struct platform_device *pdev)
 		pr_info("LCD POWER OFF\n");
 	}
 }
-
 
 static void mipi_samsung_disp_backlight_lock(struct msm_fb_data_type *mfd, int lock)
 {
@@ -802,6 +797,19 @@ static ssize_t mipi_samsung_auto_brightness_store(struct device *dev, struct dev
 }
 
 #if defined(CONFIG_RUNTIME_MIPI_CLK_CHANGE)
+void mipi_dsi_configure_dividers(int fps);
+int mipi_AMS367_dynamic_fps_folder(int is_folder_action, struct msm_panel_info *pinfo)
+{
+	if (!is_folder_action || goal_fps == 0)
+		goal_fps = pinfo->mipi.frame_rate;
+
+	current_fps = goal_fps;
+	mipi_dsi_configure_dividers(current_fps);
+
+	pr_info("%s : fps=%d, folder=%d", __func__, current_fps, is_folder_action);
+	return 0;
+}
+
 static ssize_t mipi_samsung_fps_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
@@ -816,7 +824,6 @@ static ssize_t mipi_samsung_fps_store(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t size)
 {
 	struct msm_fb_data_type *mfd;
-	int goal_fps;
 	int level = atoi(buf);
 
 	mfd = platform_get_drvdata(msd.msm_pdev);

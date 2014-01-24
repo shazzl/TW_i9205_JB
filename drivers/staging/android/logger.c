@@ -751,7 +751,11 @@ static struct logger_log VAR = { \
 	.head = 0, \
 };
 
+#ifdef CONFIG_SEC_LOGGER_BUFFER_EXPANSION
+DEFINE_LOGGER_DEVICE(log_main, LOGGER_LOG_MAIN, 2048*1024)
+#else
 DEFINE_LOGGER_DEVICE(log_main, LOGGER_LOG_MAIN, 512*1024)
+#endif
 DEFINE_LOGGER_DEVICE(log_events, LOGGER_LOG_EVENTS, 256*1024)
 DEFINE_LOGGER_DEVICE(log_radio, LOGGER_LOG_RADIO, 2048*1024)
 DEFINE_LOGGER_DEVICE(log_system, LOGGER_LOG_SYSTEM, 256*1024)
@@ -847,7 +851,11 @@ static void __init init_log_struct(void)
 	if (!_buf_log_system)
 		pr_err("logger system buffer allocation failed\n");
 
+#ifdef CONFIG_SEC_LOGGER_BUFFER_EXPANSION
+	_buf_log_main = kmalloc(SIZE_256KB * 8, GFP_KERNEL);
+#else
 	_buf_log_main = kmalloc(SIZE_256KB * 2, GFP_KERNEL);
+#endif
 	if (!_buf_log_main)
 		pr_err("logger main buffer allocation failed\n");
 
@@ -868,7 +876,11 @@ static void __init init_log_struct(void)
 
 	(&log_events)->size = SIZE_256KB;
 	(&log_system)->size = SIZE_256KB;
+#ifdef CONFIG_SEC_LOGGER_BUFFER_EXPANSION
+	(&log_main)->size = SIZE_256KB * 8;
+#else
 	(&log_main)->size = SIZE_256KB * 2;
+#endif
 
 	if (log_level == ANDROID_DEBUG_LEVEL_LOW)
 		(&log_radio)->size = SIZE_256KB * 2;

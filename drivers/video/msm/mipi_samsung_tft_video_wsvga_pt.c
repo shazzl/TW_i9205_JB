@@ -37,14 +37,16 @@ static struct mipi_dsi_phy_ctrl dsi_video_mode_phy_db = {
 	0x41, 0x0f, 0x01,
 	0x00, 0x14, 0x03, 0x00, 0x02, 0x00, 0x20, 0x00, 0x01 },
 };
+extern unsigned int system_rev;
 
 static int __init mipi_video_samsung_tft_wsvga_pt_init(void)
 {
 	int ret;
-#ifdef CONFIG_FB_MSM_MIPI_PANEL_DETECT
-	if (msm_fb_detect_client("mipi_video_samsung_tft_wsvga"))
+
+	if(system_rev) {
+		printk(KERN_ERR"%s:system_rev:%d..Initialize Quick Logic  MIPI2LVDS Converter\n", __func__,system_rev);
 		return 0;
-#endif
+	}
 
 	/* Landscape */
 	pinfo.xres = 1024;

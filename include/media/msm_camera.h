@@ -1025,7 +1025,7 @@ struct msm_snapshot_pp_status {
 #define CFG_EEPROM_DIRECT_DATA_WRITE  56
 #define CFG_EEPROM_DIRECT_DATA_ERASE  57
 /*End : shchang@qualcomm.com : 1104 - FROM*/
-#if defined(CONFIG_MACH_KS02)  || defined(CONFIG_MACH_CRATER) || defined(CONFIG_MACH_BAFFIN)
+#if defined(CONFIG_MACH_KS02)  || defined(CONFIG_MACH_CRATER) || defined(CONFIG_MACH_BAFFIN) || defined(CONFIG_MACH_CRATER_CHN_CTC)
 #define CFG_ACTUAOTOR_REG_INIT        58
 #define CFG_SET_VISION_MODE           59
 #define CFG_SET_VISION_AE             60
@@ -1036,6 +1036,7 @@ struct msm_snapshot_pp_status {
 #define CFG_MAX                       60
 #endif
 
+#define CFG_FINAL_AF				  70 	//SEMCO Request by Lizk
 
 #define MOVE_NEAR	0
 #define MOVE_FAR	1
@@ -1979,6 +1980,7 @@ struct msm_calib_af {
 	uint16_t inf_dac2;		/*1.05M*/	
 	uint16_t start_dac;		/*1.2M*/
 	uint16_t pid_dac;		/* Randy PID */
+	uint16_t cal_offset_dac ;		/* SEMCO by Liz 05112013 */
 };
 
 struct msm_calib_lsc {

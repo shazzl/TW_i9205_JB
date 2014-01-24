@@ -280,8 +280,6 @@ static void msm_hs_release_port(struct uart_port *port)
 	struct resource *gsbi_resource;
 	resource_size_t size;
 
-    printk(KERN_INFO "(msm_serial_hs) msm_hs_release_port \n");
-
 	if (is_gsbi_uart(msm_uport)) {
 		iowrite32(GSBI_PROTOCOL_IDLE, msm_uport->mapped_gsbi +
 			  GSBI_CONTROL_ADDR);
@@ -305,13 +303,10 @@ static int msm_hs_request_port(struct uart_port *port)
 	struct resource *gsbi_resource;
 	resource_size_t size;
 
-	printk(KERN_INFO "(msm_serial_hs) msm_hs_request_port \n");
-
 	gsbi_resource = platform_get_resource_byname(pdev,
 						     IORESOURCE_MEM,
 						     "gsbi_resource");
 	if (gsbi_resource) {
-	    printk(KERN_INFO "(msm_serial_hs) msm_hs_request_port 111\n");
 		size = resource_size(gsbi_resource);
 		if (unlikely(!request_mem_region(gsbi_resource->start, size,
 						 "msm_serial_hs")))
@@ -322,7 +317,6 @@ static int msm_hs_request_port(struct uart_port *port)
 			release_mem_region(gsbi_resource->start, size);
 			return -EBUSY;
 		}
-		printk(KERN_INFO "(msm_serial_hs) msm_hs_request_port 222\n");
 	}
 	/* no gsbi uart */
 	return 0;
@@ -693,9 +687,6 @@ static void msm_hs_set_termios(struct uart_port *uport,
 	unsigned int c_cflag = termios->c_cflag;
 	struct msm_hs_port *msm_uport = UARTDM_TO_MSM(uport);
 
-
-	printk(KERN_INFO "(msm_serial_hs) msm_hs_set_termios \n");
-
 	mutex_lock(&msm_uport->clk_mutex);
 	spin_lock_irqsave(&uport->lock, flags);
 
@@ -829,8 +820,6 @@ unsigned int msm_hs_tx_empty(struct uart_port *uport)
 	unsigned int data;
 	unsigned int ret = 0;
 
-    printk(KERN_INFO "(msm_serial_hs) msm_hs_tx_empty \n");
-
 	data = msm_hs_read(uport, UARTDM_SR_ADDR);
 	if (data & UARTDM_SR_TXEMT_BMSK)
 		ret = TIOCSER_TEMT;
@@ -848,10 +837,6 @@ static void msm_hs_stop_tx_locked(struct uart_port *uport)
 {
 	struct msm_hs_port *msm_uport = UARTDM_TO_MSM(uport);
 
-#if !defined(CONFIG_GSM_MODEM_SPRD6500)
-    printk(KERN_INFO "(msm_serial_hs) msm_hs_stop_tx_locked \n");
-#endif
-
 	msm_uport->tx.tx_ready_int_en = 0;
 }
 
@@ -867,8 +852,6 @@ static void msm_hs_stop_rx_locked(struct uart_port *uport)
 {
 	struct msm_hs_port *msm_uport = UARTDM_TO_MSM(uport);
 	unsigned int data;
-
-    printk(KERN_INFO "(msm_serial_hs) msm_hs_stop_rx_locked \n");
 
 	/* disable dlink */
 	data = msm_hs_read(uport, UARTDM_DMEN_ADDR);
@@ -898,10 +881,6 @@ static void msm_hs_submit_tx_locked(struct uart_port *uport)
 	struct msm_hs_port *msm_uport = UARTDM_TO_MSM(uport);
 	struct msm_hs_tx *tx = &msm_uport->tx;
 	struct circ_buf *tx_buf = &msm_uport->uport.state->xmit;
-
-#if !defined(CONFIG_GSM_MODEM_SPRD6500)
-    printk(KERN_INFO "(msm_serial_hs) msm_hs_submit_tx_locked\n");
-#endif
 
 	if (uart_circ_empty(tx_buf) || uport->state->port.tty->stopped) {
 		msm_hs_stop_tx_locked(uport);
@@ -1150,11 +1129,6 @@ static void msm_hs_start_tx_locked(struct uart_port *uport )
 {
 	struct msm_hs_port *msm_uport = UARTDM_TO_MSM(uport);
 
-#if !defined(CONFIG_GSM_MODEM_SPRD6500)
-    printk(KERN_INFO "(msm_serial_hs) msm_hs_start_tx_locked -[%d] \n", msm_uport->tx.tx_ready_int_en);
-    printk(KERN_INFO "(msm_serial_hs) msm_hs_start_tx_locked -[%d] \n", msm_uport->tx.dma_in_flight);
-#endif
-
 	if (msm_uport->tx.tx_ready_int_en == 0) {
 		msm_uport->tx.tx_ready_int_en = 1;
 		if (msm_uport->tx.dma_in_flight == 0)
@@ -1256,8 +1230,6 @@ static void msm_hs_dmov_rx_callback(struct msm_dmov_cmd *cmd_ptr,
  */
 static unsigned int msm_hs_get_mctrl_locked(struct uart_port *uport)
 {
-    printk(KERN_INFO "(msm_serial_hs) msm_hs_get_mctrl_locked \n");
-
 	return TIOCM_DSR | TIOCM_CAR | TIOCM_CTS;
 }
 
@@ -1274,8 +1246,6 @@ void msm_hs_set_mctrl_locked(struct uart_port *uport,
 {
 	unsigned int set_rts;
 	unsigned int data;
-
-    printk(KERN_INFO "(msm_serial_hs) msm_hs_set_mctrl_locked \n");
 
 	/* RTS is active low */
 	set_rts = TIOCM_RTS & mctrl ? 0 : 1;
@@ -1311,8 +1281,6 @@ static void msm_hs_enable_ms_locked(struct uart_port *uport)
 {
 	struct msm_hs_port *msm_uport = UARTDM_TO_MSM(uport);
 
-    printk(KERN_INFO "(msm_serial_hs) msm_hs_enable_ms_locked \n");
-
 	/* Enable DELTA_CTS Interrupt */
 	msm_uport->imr_reg |= UARTDM_ISR_DELTA_CTS_BMSK;
 	msm_hs_write(uport, UARTDM_IMR_ADDR, msm_uport->imr_reg);
@@ -1330,8 +1298,6 @@ static void msm_hs_break_ctl(struct uart_port *uport, int ctl)
 {
 	unsigned long flags;
 
-	printk(KERN_INFO "(msm_serial_hs) msm_hs_break_ctl \n");
-
 	spin_lock_irqsave(&uport->lock, flags);
 	msm_hs_write(uport, UARTDM_CR_ADDR, ctl ? START_BREAK : STOP_BREAK);
 	mb();
@@ -1343,16 +1309,12 @@ static void msm_hs_config_port(struct uart_port *uport, int cfg_flags)
 	unsigned long flags;
 	struct msm_hs_port *msm_uport = UARTDM_TO_MSM(uport);
 
-	printk(KERN_INFO "(msm_serial_hs) msm_hs_config_port \n");
-
 	if (cfg_flags & UART_CONFIG_TYPE) {
 		uport->type = PORT_MSM;
 		msm_hs_request_port(uport);
 	}
 
 	if (is_gsbi_uart(msm_uport)) {
-
-	    printk(KERN_INFO "(msm_serial_hs) msm_hs_config_port 111 \n");
 		if (msm_uport->pclk)
 			clk_prepare_enable(msm_uport->pclk);
 		spin_lock_irqsave(&uport->lock, flags);
@@ -1469,7 +1431,6 @@ static int msm_hs_check_clock_off(struct uart_port *uport)
 		msm_uport->wakeup.ignore = 1;
 		enable_irq(msm_uport->wakeup.irq);
 	}
-	printk(KERN_INFO "(msm_serial_hs) msm_hs_check_clock_off - dma wake unlock\n");
 	wake_unlock(&msm_uport->dma_wake_lock);
 
 	spin_unlock_irqrestore(&uport->lock, flags);
@@ -1621,7 +1582,6 @@ void msm_hs_request_clock_on(struct uart_port *uport)
 
 	switch (msm_uport->clk_state) {
 	case MSM_HS_CLK_OFF:
-		printk(KERN_INFO "(msm_serial_hs) msm_hs_check_clock_on - dma wake lock\n");
 		wake_lock(&msm_uport->dma_wake_lock);
 		disable_irq_nosync(msm_uport->wakeup.irq);
 		spin_unlock_irqrestore(&uport->lock, flags);
@@ -1738,7 +1698,6 @@ static int msm_hs_startup(struct uart_port *uport)
 	tx->dma_base = dma_map_single(uport->dev, tx_buf->buf, UART_XMIT_SIZE,
 				      DMA_TO_DEVICE);
 
-	printk(KERN_INFO "(msm_serial_hs) msm_hs_startup - dma wake lock\n");
 	wake_lock(&msm_uport->dma_wake_lock);
 	/* turn on uart clk */
 	ret = msm_hs_init_clk(uport);
@@ -1851,7 +1810,6 @@ static int msm_hs_startup(struct uart_port *uport)
 		dev_err(uport->dev, "set active error:%d\n", ret);
 	pm_runtime_enable(uport->dev);
 
-    printk(KERN_INFO "(msm_serial_hs) msm_hs_startup -after pm_runtime_enable  \n");
 	return 0;
 
 free_uart_irq:
@@ -1862,9 +1820,6 @@ deinit_uart_clk:
 	clk_disable_unprepare(msm_uport->clk);
 	if (msm_uport->pclk)
 		clk_disable_unprepare(msm_uport->pclk);
-
-	printk(KERN_INFO "(msm_serial_hs) msm_hs_startup deinit clk - dma wake unlock\n");
-
 	wake_unlock(&msm_uport->dma_wake_lock);
 
 	return ret;
@@ -2007,8 +1962,6 @@ static int __devinit msm_hs_probe(struct platform_device *pdev)
 		return -EINVAL;
 	}
 
-	printk(KERN_INFO "msm_serial_hs msm_hs_probe\n");
-
 	msm_uport = &q_uart_port[pdev->id];
 	uport = &msm_uport->uport;
 
@@ -2131,8 +2084,6 @@ static int __devinit msm_hs_probe(struct platform_device *pdev)
 	uport->line = pdev->id;
 	if (pdata != NULL && pdata->userid && pdata->userid <= UARTDM_NR)
 		uport->line = pdata->userid;
-
-	printk(KERN_INFO "msm_serial_hs msm_hs_probe end\n");	
 	return uart_add_one_port(&msm_hs_driver, uport);
 }
 
@@ -2228,7 +2179,6 @@ static void msm_hs_shutdown(struct uart_port *uport)
 		clk_disable_unprepare(msm_uport->clk);
 		if (msm_uport->pclk)
 			clk_disable_unprepare(msm_uport->pclk);
-		printk(KERN_INFO "(msm_serial_hs) msm_hs_shutdown - dma wake unlock\n");
 		wake_unlock(&msm_uport->dma_wake_lock);
 	}
 
@@ -2281,9 +2231,6 @@ static int msm_hs_runtime_suspend(struct device *dev)
 	struct platform_device *pdev = container_of(dev, struct
 						    platform_device, dev);
 	struct msm_hs_port *msm_uport = &q_uart_port[pdev->id];
-
-	printk(KERN_INFO "(msm_serial_hs) msm_hs_runtime_suspend.\n");
-
 	msm_hs_request_clock_off(&msm_uport->uport);
 	return 0;
 }

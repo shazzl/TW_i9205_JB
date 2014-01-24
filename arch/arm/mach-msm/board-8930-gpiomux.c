@@ -740,6 +740,7 @@ static struct msm_gpiomux_config msm8960_mdp_vsync_configs[] __initdata = {
 };
 
 #ifdef CONFIG_FB_MSM_HDMI_MSM_PANEL
+#if !defined(CONFIG_MACH_CRATER_CHN_CTC)
 static struct msm_gpiomux_config msm8960_hdmi_configs[] __initdata = {
 	{
 		.gpio = 99,
@@ -771,7 +772,7 @@ static struct msm_gpiomux_config msm8960_hdmi_configs[] __initdata = {
 	},
 
 };
-
+#endif
 static struct msm_gpiomux_config msm8930_mhl_configs[] __initdata = {
 	{
 		.gpio = 72,
@@ -1074,11 +1075,13 @@ int __init msm8930_init_gpiomux(void)
 			ARRAY_SIZE(msm8930_haptics_configs));
 
 #ifdef CONFIG_FB_MSM_HDMI_MSM_PANEL
+#if !defined(CONFIG_MACH_CRATER_CHN_CTC)
 	msm_gpiomux_install(msm8960_hdmi_configs,
 			ARRAY_SIZE(msm8960_hdmi_configs));
 	if (machine_is_msm8930_fluid())
 		msm_gpiomux_install(msm8930_mhl_configs,
 				ARRAY_SIZE(msm8930_mhl_configs));
+#endif
 #endif
 
 	msm_gpiomux_install(msm8960_mdp_vsync_configs,

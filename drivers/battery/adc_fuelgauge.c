@@ -43,7 +43,7 @@ static int adc_read_reg(struct i2c_client *client, int reg)
 
 	return ret;
 }
-#endif
+
 static int adc_read_word(struct i2c_client *client, int reg)
 {
 	int ret;
@@ -54,7 +54,8 @@ static int adc_read_word(struct i2c_client *client, int reg)
 
 	return ret;
 }
-/*
+#endif
+
 static int adc_get_adc_data(struct sec_fuelgauge_info *fuelgauge,
 		int adc_ch, int count)
 {
@@ -110,7 +111,7 @@ static int adc_get_adc_value(
 
 	return adc;
 }
-*/
+
 static unsigned long adc_calculate_average(
 		struct sec_fuelgauge_info *fuelgauge,
 		int channel, int adc)
@@ -169,7 +170,7 @@ static unsigned long adc_calculate_average(
 	return average_adc;
 }
 
-static int sec_bat_get_data_by_adc(
+static int adc_get_data_by_adc(
 		struct sec_fuelgauge_info *fuelgauge,
 		const sec_bat_adc_table_data_t *adc_table,
 		unsigned int adc_table_size, int adc)
@@ -210,24 +211,20 @@ data_by_adc_goto:
 	dev_dbg(&fuelgauge->client->dev,
 		"%s: adc(%d), data(%d), high(%d), low(%d)\n",
 		__func__, adc, data, high, low);
+
 	return data;
 }
 
 static int adc_get_vcell(struct i2c_client *client)
 {
-	u32 vcell;
-	u16 w_data;
-	u32 temp;
+	struct sec_fuelgauge_info *fuelgauge =
+				i2c_get_clientdata(client);
+	int vcell;
 
-	temp = adc_read_word(client, MAX17048_VCELL_MSB);
-
-	w_data = swab16(temp);
-
-	temp = ((w_data & 0xFFF0) >> 4) * 1250;
-	vcell = temp / 1000;
-
-	dev_dbg(&client->dev,
-		"%s : vcell (%d)\n", __func__, vcell);
+	vcell = adc_get_data_by_adc(fuelgauge,
+		get_battery_data(fuelgauge).adc2vcell_table,
+		get_battery_data(fuelgauge).adc2vcell_table_size,
+		adc_get_adc_value(fuelgauge, SEC_BAT_ADC_CHANNEL_VOLTAGE_NOW));
 
 	return vcell;
 }
@@ -263,12 +260,12 @@ static int adc_get_soc(struct i2c_client *client)
 				i2c_get_clientdata(client);
 	int soc;
 
-	soc = sec_bat_get_data_by_adc(fuelgauge,
+	soc = adc_get_data_by_adc(fuelgauge,
 		get_battery_data(fuelgauge).ocv2soc_table,
 		get_battery_data(fuelgauge).ocv2soc_table_size,
 		fuelgauge->info.voltage_ocv);
 
-	return soc; 
+	return soc;
 }
 
 static int adc_get_current(struct i2c_client *client)

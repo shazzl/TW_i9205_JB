@@ -13,7 +13,7 @@
 #include "mipi_dsi.h"
 #include <linux/wakelock.h>
 
-#if defined(CONFIG_MACH_CRATERTD_CHN_3G) || defined(CONFIG_MACH_BAFFINVETD_CHN_3G)
+#if defined(CONFIG_MACH_CRATERTD_CHN_3G) || defined(CONFIG_MACH_BAFFINVETD_CHN_3G) || defined(CONFIG_MACH_CRATER_CHN_CTC)
 #define CONFIG_BACKLIGHT_IC_KTD3102
 #endif
 
@@ -24,9 +24,24 @@ int mipi_hx8389b_device_register(struct msm_panel_info *pinfo,
 					u32 channel, u32 panel);
 
 #if defined(CONFIG_BACKLIGHT_IC_KTD3102)
+#if defined(CONFIG_MACH_CRATER_CHN_CTC)
+#define DISP_BL_CONT_GPIO 51
+#define CONFIG_BL_CTRL_MODE_2
+#else
 #define DISP_BL_CONT_GPIO 63
+#endif
 #define MAX_BRIGHTNESS_IN_BLU	32
 
+#if defined(CONFIG_BL_CTRL_MODE_2)
+#define MAX_BRIGHTNESS_VALUE	255
+#define MIN_BRIGHTNESS_VALUE	31
+#define AAT_DIMMING_VALUE	    31
+
+struct brt_value {
+	int level;			/* Platform setting values*/
+	int tune_level;			/* Chip Setting values*/
+};
+#endif
 
 struct cmd_set {
 	struct dsi_cmd_desc *cmd;

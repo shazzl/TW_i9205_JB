@@ -49,14 +49,14 @@ Melfas touchkey register
 #define KEYCODE_BIT 0x07
 #define ESD_STATE_BIT 0x10
 #define LED_BRIGHT_BIT 0x14
-#define LED_BRIGHT 0x05 /*0~14*/
+#define LED_BRIGHT 0x0C /*0~14*/
 #define I2C_M_WR 0 /* for i2c */
 
 #define DEVICE_NAME "melfas-touchkey"
 #define INT_PEND_BASE	0xE0200A54
 
 #define MCS5080_CHIP		0x03
-#define MCS5080_last_ver	0x05  /*M550 v05*/
+#define MCS5080_last_ver	0x07  /*M550 v07*/
 
 // if you want to see log, set this definition to NULL or KERN_WARNING
 #define TCHKEY_KERN_DEBUG      KERN_DEBUG

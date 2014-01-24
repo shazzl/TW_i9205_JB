@@ -5,6 +5,7 @@ EXTRA_CFLAGS += -Idrivers/media/video/msm/eeprom
 EXTRA_CFLAGS += -Idrivers/media/video/msm/csi
 obj-$(CONFIG_MSM_CAMERA_SENSOR) += msm_sensor_common.o msm_sensor.o msm_sensor_bayer.o msm_sensor_init.o
 obj-$(CONFIG_ISX012) += isx012_v4l2.o
+obj-$(CONFIG_S5K5CCGX) += s5k5ccgx_v4l2.o
 obj-$(CONFIG_SR130PC20) += sr130pc20_v4l2.o
 obj-$(CONFIG_SR030PC50) += sr030pc50_v4l2.o
 obj-$(CONFIG_OV5647) += ov5647_v4l2.o

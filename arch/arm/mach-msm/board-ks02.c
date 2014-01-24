@@ -3097,8 +3097,8 @@ static struct gpio_keys_button gpio_keys_button[] = {
 		.gpio			= GPIO_VOLUME_UP,
 		.active_low		= 1,
 		.wakeup			= 0,
-		.debounce_interval	= 15, /* ms */
-		.desc			= "volume_up",
+		.debounce_interval	= 5, /* ms */
+		.desc			= "Vol Up",
 	},
 	{
 		.code			= KEY_VOLUMEDOWN,
@@ -3106,8 +3106,8 @@ static struct gpio_keys_button gpio_keys_button[] = {
 		.gpio			= GPIO_VOLUME_DOWN,
 		.active_low		= 1,
 		.wakeup			= 0,
-		.debounce_interval	= 15, /* ms */
-		.desc			= "volume_down",
+		.debounce_interval	= 5, /* ms */
+		.desc			= "Vol Down",
 	},
 	{
 		.code			= KEY_POWER,
@@ -3115,8 +3115,8 @@ static struct gpio_keys_button gpio_keys_button[] = {
 		.gpio			= GPIO_HOLD_KEY,
 		.active_low		= 1,
 		.wakeup			= 1,
-		.debounce_interval	= 15, /* ms */
-		.desc			= "hold_power",
+		.debounce_interval	= 5, /* ms */
+		.desc			= "Power",
 	},
 	{
 		.code			= KEY_3G,
@@ -3124,8 +3124,8 @@ static struct gpio_keys_button gpio_keys_button[] = {
 		.gpio			= GPIO_DATA_KEY,
 		.active_low		= 1,
 		.wakeup			= 0,
-		.debounce_interval	= 15, /* ms */
-		.desc			= "data_block",
+		.debounce_interval	= 5, /* ms */
+		.desc			= "Data",
 	},
 };
 static struct gpio_keys_platform_data gpio_keys_platform_data = {
@@ -4756,6 +4756,10 @@ void __init msm8930_ks02_init(void)
 #endif
 	if (PLATFORM_IS_CHARM25())
 		platform_add_devices(mdm_devices, ARRAY_SIZE(mdm_devices));
+#ifdef CONFIG_SENSORS_SSP
+    ssp_sensor_power_on_vdd(1, 1);
+    initialize_ssp_gpio();
+#endif
 #if defined(CONFIG_KEYBOARD_CYPRESS_TOUCH) || defined(CONFIG_KEYBOARD_TC360_TOUCHKEY)|| defined(CONFIG_KEYBOARD_MELFAS_TOUCHKEY)
 	input_touchkey_init();
 #endif
@@ -4783,9 +4787,6 @@ void __init msm8930_ks02_init(void)
 #endif
 #ifdef CONFIG_FM_SI4705
 	fm_radio_init();
-#endif
-#ifdef CONFIG_SENSORS_SSP
-    initialize_ssp_gpio();
 #endif
 
 }

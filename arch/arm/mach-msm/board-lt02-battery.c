@@ -45,7 +45,7 @@ static sec_charging_current_t charging_current_table[] = {
 	{1900,	2100,	200,	40*60},	/* Unknown */
 	{0,	0,	0,	0},					/* Battery */
 	{0,	0,	0,	0},					/* UPS */
-	{1900,	2100,	200,	40*60},	/* MAINS */
+	{2000,	2100,	200,	40*60},	/* MAINS */
 	{460,	460,	200,	40*60},	/* USB */
 	{460,	460,	200,	40*60},	/* USB_DCP */
 	{1000,	1000,	200,	40*60},	/* USB_CDP */
@@ -53,7 +53,7 @@ static sec_charging_current_t charging_current_table[] = {
 	{1700,	2100,	200,	40*60},	/* MISC */
 	{0,	0,	0,	0},					/* Cardock */
 	{500,	500,	200,	40*60},	/* Wireless */
-	{1900,	2100,	200,	40*60},	/* UartOff */
+	{0,	0,	0,	0},	/* UartOff */
 	{0,	0,	0,	0},					/* OTG */
 	{0,	0,	0,	0},					/* BMS */
 };
@@ -632,13 +632,13 @@ sec_battery_platform_data_t sec_battery_pdata = {
 		SEC_BATTERY_FULL_CONDITION_NOTIMEFULL |
 		SEC_BATTERY_RECHARGE_CONDITION_VCELL,
 	.full_condition_soc = 97,
-	.full_condition_vcell = 4300,
+	.full_condition_vcell = 4150,
 
 	.recharge_check_count = 2,
 	.recharge_condition_type =
 		SEC_BATTERY_RECHARGE_CONDITION_VCELL,
 	.recharge_condition_soc = 98,
-	.recharge_condition_vcell = 4300,
+	.recharge_condition_vcell = 4150,
 
 	.charging_total_time = 6 * 60 * 60,
 	.recharging_total_time = 90 * 60,
@@ -667,7 +667,7 @@ sec_battery_platform_data_t sec_battery_pdata = {
 	.chg_polarity_status = 0,
 	.chg_irq = 0,
 	.chg_irq_attr = IRQF_TRIGGER_FALLING,
-	.chg_float_voltage = 4350,
+	.chg_float_voltage = 4200,
 };
 
 static struct platform_device sec_device_battery = {

@@ -260,7 +260,7 @@ static struct sec_therm_adc_table temper_table_ap[] = {
 	{1626500,	 -200},
 	{1697050,	 -300},
 };
-#elif defined(CONFIG_MACH_CRATER)
+#elif defined(CONFIG_MACH_CRATER) || defined(CONFIG_MACH_BAFFIN)
 static struct sec_therm_adc_table temper_table_ap[] = {
 	{240910,    700},
 	{278128,    650},

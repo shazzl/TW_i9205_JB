@@ -1828,9 +1828,7 @@ geomagnetic_probe(struct i2c_client *client, const struct i2c_device_id *id)
 	data->distortion[0] = YAS_MAGCALIB_DISTORTION_LV1;
 	data->distortion[1] = YAS_MAGCALIB_DISTORTION_LV2;
 	data->distortion[2] = YAS_MAGCALIB_DISTORTION_LV3;
-#ifdef CONFIG_MACH_SERRANO_EUR_LTE
-	data->ellipsoid_mode = YAS_MAGCALIB_MODE_SPHERE;
-#endif
+
 	if (pdata != NULL && pdata->init_gpio != NULL)
 		data->init_gpio = pdata->init_gpio;
 

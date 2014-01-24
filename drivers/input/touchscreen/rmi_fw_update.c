@@ -901,7 +901,7 @@ static int fwu_start_reflash(bool mode, bool factory_fw)
 	|| defined(CONFIG_MACH_MELIUS_TMO) \
 	|| defined(CONFIG_MACH_MELIUS_SPR) \
 	|| defined(CONFIG_MACH_MELIUS_USC)
-	
+
 					case MANUFACTURERS_NEP:
 						if (release_order == 0x13) {
 							snprintf(fw_path, SYNAPTICS_MAX_FW_PATH,

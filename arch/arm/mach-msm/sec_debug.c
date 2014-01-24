@@ -203,6 +203,10 @@ struct sec_debug_log {
 	atomic_t idx_secmsg[CONFIG_NR_CPUS];
 	struct secmsg_log secmsg[CONFIG_NR_CPUS][MSG_LOG_MAX];
 #endif
+#ifdef CONFIG_SEC_DEBUG_AVC_LOG
+	atomic_t idx_secavc[CONFIG_NR_CPUS];
+	struct secavc_log secavc[CONFIG_NR_CPUS][AVC_LOG_MAX];
+#endif
 #ifdef CONFIG_SEC_DEBUG_DCVS_LOG
 	atomic_t dcvs_log_idx ;
 	struct dcvs_debug dcvs_log[DCVS_LOG_MAX] ;
@@ -1178,6 +1182,10 @@ static int __init __init_sec_debug_log(void)
 		return -EFAULT;
 	}
 
+#ifdef CONFIG_SEC_DEBUG_AVC_LOG
+	memset(vaddr->secavc, 0x0, sizeof(vaddr->secavc));
+#endif
+
 	for (i = 0; i < CONFIG_NR_CPUS; i++) {
 		atomic_set(&(vaddr->idx_sched[i]), -1);
 		atomic_set(&(vaddr->idx_irq[i]), -1);
@@ -1185,6 +1193,9 @@ static int __init __init_sec_debug_log(void)
 		atomic_set(&(vaddr->idx_timer[i]), -1);
 #ifdef CONFIG_SEC_DEBUG_MSG_LOG
 		atomic_set(&(vaddr->idx_secmsg[i]), -1);
+#endif
+#ifdef CONFIG_SEC_DEBUG_AVC_LOG
+		atomic_set(&(vaddr->idx_secavc[i]), -1);
 #endif
 	}
 #ifdef CONFIG_SEC_DEBUG_DCVS_LOG
@@ -1503,6 +1514,29 @@ asmlinkage int sec_debug_msg_log(void *caller, const char *fmt, ...)
 	secdbg_log->secmsg[cpu][i].caller0 = __builtin_return_address(0);
 	secdbg_log->secmsg[cpu][i].caller1 = caller;
 	secdbg_log->secmsg[cpu][i].task = current->comm;
+
+	return r;
+}
+
+#endif
+
+#ifdef CONFIG_SEC_DEBUG_AVC_LOG
+asmlinkage int sec_debug_avc_log(const char *fmt, ...)
+{
+	int cpu = smp_processor_id();
+	int r = 0;
+	int i;
+	va_list args;
+
+	if (!secdbg_log)
+		return 0;
+
+	i = atomic_inc_return(&(secdbg_log->idx_secavc[cpu]))
+		& (AVC_LOG_MAX - 1);
+	va_start(args, fmt);
+	r = vsnprintf(secdbg_log->secavc[cpu][i].msg,
+		sizeof(secdbg_log->secavc[cpu][i].msg), fmt, args);
+	va_end(args);
 
 	return r;
 }

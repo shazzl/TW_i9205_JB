@@ -630,7 +630,7 @@ msm8930_pm8917_regulator_pdata[] __devinitdata = {
 	PM8XXX_LDO(L30,      "8917_l30", 0, 1, 1800000, 1800000, 200, NULL,
 		0, 4),
 #else
-	PM8XXX_LDO(L30,      "8917_l30", 0, 1, 1800000, 2800000, 200, NULL,
+	PM8XXX_LDO(L30,      "8917_l30", 0, 1, 1800000, 3000000, 200, NULL,
 		0, 4),
 #endif
 	PM8XXX_LDO(L31,      "8917_l31", 0, 1, 1800000, 3300000, 200, NULL,
@@ -646,15 +646,20 @@ msm8930_pm8917_regulator_pdata[] __devinitdata = {
 		0, 7),
 	PM8XXX_LDO(L34,      "8917_l34", 0, 1, 1800000, 1800000, 200, NULL,
 		0, 8),
-#if defined(CONFIG_MACH_CRATER) || defined (CONFIG_MACH_BAFFIN)
+#if defined(CONFIG_MACH_CRATER) || defined (CONFIG_MACH_BAFFIN)|| defined(CONFIG_MACH_CRATER_CHN_CTC)
 	PM8XXX_LDO(L35,      "8917_l35", 0, 1, 1800000, 3300000, 200, NULL,
 		0, 9),
 #else
 	PM8XXX_LDO(L35,      "8917_l35", 0, 1, 3000000, 3300000, 200, NULL,
 		0, 9),
 #endif
+#if defined(CONFIG_MACH_CRATER_CHN_CTC)
+    PM8XXX_LDO(L36,      "8917_l36", 0, 1, 1800000, 3300000, 200, NULL,
+      0, 10),
+#else
 	PM8XXX_LDO(L36,      "8917_l36", 0, 1, 2200000, 3300000, 200, NULL,
 		0, 10),
+#endif		
 	/*
 	 *           ID     name  always_on   min_uV   max_uV en_t supply reg_ID
 	 */
@@ -686,7 +691,7 @@ msm8930_rpm_regulator_init_data[] __devinitdata = {
 	RPM_LDO(L5,	 0, 1, 0, 2950000, 2950000, NULL,      0, 0),
 	RPM_LDO(L6,	 0, 1, 0, 2950000, 2950000, NULL,      0, 0),
 	RPM_LDO(L7,	 1, 1, 0, 1850000, 2950000, NULL,      10000, 10000),
-#if defined(CONFIG_MACH_CRATER) || defined (CONFIG_MACH_BAFFIN)
+#if defined(CONFIG_MACH_CRATER) || defined (CONFIG_MACH_BAFFIN) || defined (CONFIG_MACH_MELIUS_USC) || defined (CONFIG_MACH_MELIUS_SPR)
 	RPM_LDO(L8,	 0, 1, 0, 2800000, 3300000, NULL,      0, 0),
 #elif defined(CONFIG_FB_MSM_MIPI_ILI9341_BOE_VIDEO_QVGA_PT_PANEL)
 	RPM_LDO(L8,	 0, 1, 0, 2800000, 2800000, NULL,      0, 0),

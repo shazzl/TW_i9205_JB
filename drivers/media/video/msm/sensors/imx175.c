@@ -74,7 +74,9 @@ static struct v4l2_subdev_info imx175_subdev_info[] = {
 extern struct device *cam_dev_back;
 
 static struct regulator *l11, *l32, *l34;
-
+#if defined(CONFIG_MACH_CRATER_CHN_CTC)
+static struct regulator *l35,*l36;
+#endif
 static struct msm_camera_i2c_conf_array imx175_init_conf[] = {
 	{&imx175_recommend_settings[0],
 	ARRAY_SIZE(imx175_recommend_settings), 0, MSM_CAMERA_I2C_BYTE_DATA}
@@ -403,6 +405,45 @@ int32_t imx175_sensor_power_up(struct msm_sensor_ctrl_t *s_ctrl)
 				cam_err("[CAM_SENSOR_A2P8]::error enabling regulator\n");
 			else
 				cam_err("[CAM_SENSOR_A2P8]::SET OK\n");
+#if defined (CONFIG_MACH_CRATER_CHN_CTC)
+			gpio_tlmm_config(GPIO_CFG(GPIO_CAM_SENSOR_EN, 0, GPIO_CFG_OUTPUT,
+			GPIO_CFG_PULL_DOWN, GPIO_CFG_16MA), GPIO_CFG_ENABLE);
+
+		l36 = regulator_get(NULL, "8917_l36");
+		if(IS_ERR(l36))
+			cam_err("[CAM_IO_1P8]::regulator_get l36 fail\n");
+		ret = regulator_set_voltage(l36 , 1800000, 1800000);
+		if (ret)
+			cam_err("[CAM_IO_1P8]::error setting voltage\n");
+		ret = regulator_enable(l36);
+		if (ret)
+			cam_err("[CAM_IO_1P8]::SET Fail\n");
+		else
+			cam_err("[CAM_IO_1P8]::SET OK\n");
+               msleep(2);
+			   
+			gpio_set_value_cansleep(GPIO_CAM_SENSOR_EN, 1);
+			ret = gpio_get_value(GPIO_CAM_SENSOR_EN);
+			if (ret)
+				cam_err("[GPIO_CAM_SENSOR_EN::CAM_SENSOR_A2P8::ret::%d]::SET OK\n", ret);
+			else
+				cam_err("[GPIO_CAM_SENSOR_EN::CAM_SENSOR_A2P8]::SET Fail\n");
+		msleep(2);
+
+		//DVDD 1.8
+		l35 = regulator_get(NULL, "8917_l35");
+		if(IS_ERR(l35))
+			cam_err("[CAM_DVDD_1P8]::regulator_get l35 fail\n");
+		ret = regulator_set_voltage(l35 , 1800000, 1800000);
+		if (ret)
+			cam_err("[CAM_DVDD_1P8]::error setting voltage\n");
+		ret = regulator_enable(l35);
+		if (ret)
+			cam_err("[CAM_DVDD_1P8]::SET Fail\n");
+		else
+			cam_err("[CAM_DVDD_1P8]::SET OK\n");
+              msleep(5);
+#endif     
 		} else {
 			gpio_tlmm_config(GPIO_CFG(GPIO_CAM_SENSOR_EN, 0, GPIO_CFG_OUTPUT,
 				GPIO_CFG_PULL_DOWN, GPIO_CFG_16MA), GPIO_CFG_ENABLE);
@@ -458,7 +499,6 @@ int32_t imx175_sensor_power_up(struct msm_sensor_ctrl_t *s_ctrl)
 			cam_err("[CAM_CORE_EN::CAM_ISP_CORE_1P2]::SET Fail\n");
 		mdelay(5);
 #endif
-
 		/* enable MCLK */
 		gpio_tlmm_config(GPIO_CFG(GPIO_MAIN_CAM_MCLK, 1,
 			GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA),
@@ -653,6 +693,40 @@ int32_t imx175_sensor_power_down(struct msm_sensor_ctrl_t *s_ctrl)
 				else
 					cam_err("[CAM_SENSOR_A2P8]::OFF OK\n");
 			}
+#if defined (CONFIG_MACH_CRATER_CHN_CTC)
+		/*DVDD*/
+		l35 = regulator_get(NULL, "8917_l35");
+		if (IS_ERR(l35)) 
+			cam_err("[CAM_SENSOR_DVDD_1P8]::regulator_get l35 fail\n");
+		
+		ret = regulator_disable(l35);
+		if (ret)
+			cam_err("[CAM_SENSOR_DVDD_1P8]::OFF Fail\n");
+		else
+			cam_err("[CAM_SENSOR_DVDD_1P8]::OFF OK\n");
+               mdelay(2);  
+			   
+        gpio_set_value_cansleep(GPIO_CAM_SENSOR_EN, 0);
+        ret = gpio_get_value(GPIO_CAM_SENSOR_EN);
+        if (!ret)
+          cam_err("[GPIO_CAM_SENSOR_EN::CAM_SENSOR_A2P8::ret::%d]::OFF OK\n", ret);
+        else
+          cam_err("[GPIO_CAM_SENSOR_EN::CAM_SENSOR_A2P8]::OFF Fail\n");
+		mdelay(2);
+
+		
+		/*IO*/
+		l36 = regulator_get(NULL, "8917_l36");
+		if (IS_ERR(l36)) 
+			cam_err("[CAM_SENSOR_IO_1P8]::regulator_get l36 fail\n");
+		
+		ret = regulator_disable(l36);
+		if (ret)
+			cam_err("[CAM_SENSOR_IO_1P8]::OFF Fail\n");
+		else
+			cam_err("[CAM_SENSOR_IO_1P8]::OFF OK\n");
+               usleep(1000); 
+#endif  
 		} else {
 			gpio_set_value_cansleep(GPIO_CAM_SENSOR_EN, 0);
 			ret = gpio_get_value(GPIO_CAM_SENSOR_EN);

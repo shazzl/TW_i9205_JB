@@ -134,6 +134,37 @@ static char samsung_ltps_panel_control[] = {
 	0x01,
 };
 
+#elif defined (CONFIG_MIPI_SAMSUNG_OLED_VIDEO_QHD_MIPICLK_461)
+static char samsung_ltps_panel_control_r01[] = {
+	0xCB,
+	0x06, 0x00, 0x01, 0x00, 0x00,
+	0x00, 0x01, 0x02, 0x00, 0x00,
+	0x30, 0x67, 0x89, 0x00, 0x5B,
+	0x94, 0x00, 0x00, 0x00, 0x00,
+	0x00, 0x62, 0x7E, 0x00, 0x00,
+	0x00, 0x00, 0x00, 0x00, 0x00,
+	0x00, 0x00, 0x00, 0x00, 0x0E,
+	0x73, 0x0E, 0x73, 0x05, 0x05,
+	0x21, 0x21, 0x21, 0x00, 0x00,
+	0x00, 0x05, 0x80, 0x08, 0x0C,
+	0x01,
+};
+
+static char samsung_ltps_panel_control[] = {
+	0xCB,
+	0x07, 0x00, 0x10, 0x10, 0x00, 
+	0x00, 0x01, 0x02, 0x00, 0x00, 
+	0x30, 0x80, 0x60, 0x00, 0x65, 
+	0x8A, 0x00, 0x00, 0x00, 0x00, 
+	0x00, 0x6C, 0x74, 0x6C, 0x74,
+	0x00, 0x00, 0x00, 0x00, 0x00, 
+	0x00, 0x00, 0x00, 0x00, 0x0E, 
+	0x73, 0x0E, 0x73, 0x11, 0x07,
+	0x21, 0x21, 0x28, 0x00, 0x00, 
+	0x00, 0x07, 0x80, 0x08, 0x0C,
+	0x01,
+};
+
 #elif defined (CONFIG_MIPI_SAMSUNG_OLED_VIDEO_QHD_MIPICLK_473)
 static char samsung_ltps_panel_control_r01[] = {
 	0xCB,
@@ -893,11 +924,11 @@ static struct dsi_cmd_desc samsung_on_cmds_revE[] = {
 		sizeof(samsung_acl_condition), samsung_acl_condition},
 
 #if defined(CONFIG_FEATURE_FLIPLR)
-	{DTYPE_DCS_LWRITE, 1, 0, 0, 120,
+	{DTYPE_DCS_LWRITE, 1, 0, 0, 100,
 		sizeof(samsung_ltps_panel_control_r01), samsung_ltps_panel_control_r01},
 #endif
 
-	{DTYPE_DCS_LWRITE, 1, 0, 0, 0,
+	{DTYPE_DCS_LWRITE, 1, 0, 0, 20,
 		sizeof(samsung_avc_set_global), samsung_avc_set_global},
 	{DTYPE_DCS_LWRITE, 1, 0, 0, 0,
 		sizeof(samsung_avc_set_power_control), samsung_avc_set_power_control},
@@ -1588,10 +1619,7 @@ static int brightness_control(int bl_level)
 
 	candela = lux_tbl[get_candela_index(bl_level)];
 
-	if (mipi_pd.brightness_level == candela)
-		return 0;
-	else
-		pr_info("%s mipi_pd.brightness_level : %d candela : %d", __func__, mipi_pd.brightness_level, candela);
+	pr_info("%s mipi_pd.brightness_level : %d candela : %d", __func__, mipi_pd.brightness_level, candela);
 
 	cmd_size = 0;
 
@@ -1836,7 +1864,7 @@ void reset_bl_level(void)
 }
 
 static struct mipi_panel_data mipi_pd = {
-	.panel_name	= "SDC_AMS429AP\n",
+	.panel_name	= "SDC_AMS427AP01\n",
 	.on		= {samsung_on_cmds_revB
 				, ARRAY_SIZE(samsung_on_cmds_revB)},
 	.off		= {panel_off_cmds
@@ -1884,6 +1912,10 @@ static struct mipi_dsi_phy_ctrl dsi_video_mode_phy_db = {
 	/* timing	*/
 	{0x7F, 0x30, 0x13, 0x00, 0x41, 0x47, 0x17, 0x34,
 	 0x20, 0x03, 0x04, 0xa0},
+#elif defined (CONFIG_MIPI_SAMSUNG_OLED_VIDEO_QHD_MIPICLK_461)
+	/* timing	*/
+	{0x81, 0x31, 0x13, 0x00, 0x42, 0x45, 0x18, 0x35,
+	 0x21, 0x03, 0x04, 0xa0},	 
 #elif defined (CONFIG_MIPI_SAMSUNG_OLED_VIDEO_QHD_MIPICLK_473)
 	/* timing	*/
 	{0x85, 0x32, 0x13, 0x00, 0x43, 0x4C, 0x18, 0x36,
@@ -1951,6 +1983,9 @@ printk(KERN_DEBUG "[lcd] mipi_cmd_samsung_oled_qhd_pt_init start\n");
 #elif defined (CONFIG_MIPI_SAMSUNG_OLED_VIDEO_QHD_MIPICLK_450)
 	pinfo.lcdc.h_back_porch = 18;
 	pinfo.lcdc.h_front_porch = 78;
+#elif defined (CONFIG_MIPI_SAMSUNG_OLED_VIDEO_QHD_MIPICLK_461)
+	pinfo.lcdc.h_back_porch = 20;
+	pinfo.lcdc.h_front_porch = 93;	
 #elif defined (CONFIG_MIPI_SAMSUNG_OLED_VIDEO_QHD_MIPICLK_473)
 	pinfo.lcdc.h_back_porch = 41;
 	pinfo.lcdc.h_front_porch = 85;
@@ -1980,6 +2015,8 @@ printk(KERN_DEBUG "[lcd] mipi_cmd_samsung_oled_qhd_pt_init start\n");
 	pinfo.clk_rate = 420000000;
 #elif defined (CONFIG_MIPI_SAMSUNG_OLED_VIDEO_QHD_MIPICLK_450)
 	pinfo.clk_rate = 450000000;
+#elif defined (CONFIG_MIPI_SAMSUNG_OLED_VIDEO_QHD_MIPICLK_461)
+	pinfo.clk_rate = 461000000;
 #elif defined (CONFIG_MIPI_SAMSUNG_OLED_VIDEO_QHD_MIPICLK_473)
 	pinfo.clk_rate = 473000000;
 #elif defined (CONFIG_MIPI_SAMSUNG_OLED_VIDEO_QHD_MIPICLK_480)

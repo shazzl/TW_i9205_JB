@@ -265,7 +265,7 @@ struct sx150x_platform_data msm8930_sx150x_data[] = {
 #define MSM_ION_MM_SIZE            0x3800000 /* Need to be multiple of 64K */
 #define MSM_ION_SF_SIZE            0x0
 #define MSM_ION_QSECOM_SIZE	0x780000 /* (7.5MB) */
-#define MSM_ION_HEAP_NUM	6
+#define MSM_ION_HEAP_NUM	3
 #else
 #define MSM_ION_SF_SIZE		MSM_PMEM_SIZE
 #define MSM_ION_MM_SIZE		MSM_PMEM_ADSP_SIZE
@@ -472,6 +472,7 @@ static void tsu6721_callback(enum cable_type_t cable_type, int attached)
 	case CABLE_TYPE_CDP:
 		pr_info("%s USB CDP is %s\n",
 			__func__, attached ? "attached" : "detached");
+		sec_otg_set_vbus_state(attached);
 		break;
 	case CABLE_TYPE_OTG:
 		pr_info("%s OTG is %s\n",
@@ -1473,36 +1474,10 @@ static int msm8930_paddr_to_memtype(unsigned int paddr)
 #define FMEM_ENABLED 0
 #ifdef CONFIG_ION_MSM
 #ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
-static struct ion_cp_heap_pdata cp_mm_msm8930_ion_pdata = {
-	.permission_type = IPT_TYPE_MM_CARVEOUT,
-	.align = PAGE_SIZE,
-	.reusable = FMEM_ENABLED,
-	.mem_is_fmem = FMEM_ENABLED,
-	.fixed_position = FIXED_MIDDLE,
-	.is_cma	= 1,
-	.no_nonsecure_alloc = 1,
-};
-
-static struct ion_cp_heap_pdata cp_mfc_msm8930_ion_pdata = {
-	.permission_type = IPT_TYPE_MFC_SHAREDMEM,
-	.align = PAGE_SIZE,
-	.reusable = 0,
-	.mem_is_fmem = FMEM_ENABLED,
-	.fixed_position = FIXED_HIGH,
-	.no_nonsecure_alloc = 1,
-};
-
 static struct ion_co_heap_pdata co_msm8930_ion_pdata = {
 	.adjacent_mem_id = INVALID_HEAP_ID,
 	.align = PAGE_SIZE,
 	.mem_is_fmem = 0,
-};
-
-static struct ion_co_heap_pdata fw_co_msm8930_ion_pdata = {
-	.adjacent_mem_id = ION_CP_MM_HEAP_ID,
-	.align = SZ_128K,
-	.mem_is_fmem = FMEM_ENABLED,
-	.fixed_position = FIXED_LOW,
 };
 #endif
 
@@ -1536,31 +1511,6 @@ struct ion_platform_heap msm8930_heaps[] = {
 			.name	= ION_VMALLOC_HEAP_NAME,
 		},
 #ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
-		{
-			.id	= ION_CP_MM_HEAP_ID,
-			.type	= ION_HEAP_TYPE_CP,
-			.name	= ION_MM_HEAP_NAME,
-			.size	= MSM_ION_MM_SIZE,
-			.memory_type = ION_EBI_TYPE,
-			.extra_data = (void *) &cp_mm_msm8930_ion_pdata,
-			.priv	= &ion_mm_heap_device.dev
-		},
-		{
-			.id	= ION_MM_FIRMWARE_HEAP_ID,
-			.type	= ION_HEAP_TYPE_CARVEOUT,
-			.name	= ION_MM_FIRMWARE_HEAP_NAME,
-			.size	= MSM_ION_MM_FW_SIZE,
-			.memory_type = ION_EBI_TYPE,
-			.extra_data = (void *) &fw_co_msm8930_ion_pdata,
-		},
-		{
-			.id	= ION_CP_MFC_HEAP_ID,
-			.type	= ION_HEAP_TYPE_CP,
-			.name	= ION_MFC_HEAP_NAME,
-			.size	= MSM_ION_MFC_SIZE,
-			.memory_type = ION_EBI_TYPE,
-			.extra_data = (void *) &cp_mfc_msm8930_ion_pdata,
-		},
 #ifndef CONFIG_MSM_IOMMU
 		{
 			.id	= ION_SF_HEAP_ID,
@@ -4869,9 +4819,15 @@ void __init msm8930_melius_init(void)
 #ifdef CONFIG_USB_HOST_NOTIFY
 	msm_otg_power_init(GPIO_OTG_TEST, 0);
 #endif
+
+/* Enable 5V Boost(GPIO_63) */
+	gpio_tlmm_config(GPIO_CFG(GPIO_5V_ENABLE, 0,
+			GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA), 1);
+	gpio_set_value(GPIO_5V_ENABLE, 1);
+
 }
 
-MACHINE_START(MELIUS, "SAMSUNG MELIUS")
+MACHINE_START(BISCOTTO, "SAMSUNG BISCOTTO")
 	.map_io = msm8930_map_io,
 	.reserve = msm8930_reserve,
 	.init_irq = msm8930_init_irq,

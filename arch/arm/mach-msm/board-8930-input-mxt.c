@@ -717,7 +717,7 @@ static bool mxts_read_chg(void)
 #elif defined(CONFIG_MACH_SERRANO_EUR_LTE)
 #define PROJECT_NAME	"I9195"
 #elif defined(CONFIG_MACH_SERRANO_USC)
-#define PROJECT_NAME	"R809"
+#define PROJECT_NAME	"R890"
 #elif defined(CONFIG_MACH_SERRANO_VZW)
 #define PROJECT_NAME	"I435"
 #elif defined(CONFIG_MACH_SERRANO_SPR)
@@ -737,7 +737,11 @@ static bool mxts_read_chg(void)
 #define TOUCH_MAX_Y	800
 #define NUM_XNODE 19
 #define NUM_YNODE 11
+#if defined(CONFIG_MACH_GOLDEN)
+#define PROJECT_NAME	"G730"
+#else
 #define PROJECT_NAME	"224S"
+#endif
 #define CONFIG_VER		"0327"
 #endif
 

@@ -104,7 +104,9 @@
 #ifdef CONFIG_BCM2079X_NFC_I2C
 #include <linux/nfc/bcm2079x.h>
 #endif
-
+#ifdef CONFIG_SENSORS_AD7146
+#include <linux/input/ad7146.h>
+#endif
 
 #include <linux/i2c-gpio.h>
 #include <mach/msm8930-gpio.h>
@@ -145,7 +147,9 @@
 #ifdef CONFIG_PM8921_SEC_CHARGER
 #include <linux/mfd/pm8xxx/pm8921-sec-charger.h>
 #endif
-
+#ifdef CONFIG_SEC_FPGA
+#include <linux/barcode_emul.h>
+#endif
 bool ovp_state;
 static struct platform_device msm_fm_platform_init = {
 	.name = "iris_fm",
@@ -261,6 +265,40 @@ struct sx150x_platform_data msm8930_sx150x_data[] = {
 #define A2220_RESET     PM8038_GPIO_PM_TO_SYS(PMIC_GPIO_2MIC_RST)
 #endif
 
+#if  defined(CONFIG_IR_REMOCON_FPGA)
+static void irda_wake_en(bool onoff)
+{
+	gpio_direction_output(GPIO_FPGA_RST_N, onoff);
+	printk(KERN_ERR "%s: %d\n", __func__, onoff);
+}
+
+static void irda_device_init(void)
+{
+	printk(KERN_ERR "%s called!\n", __func__);
+	gpio_tlmm_config(GPIO_CFG(GPIO_IRDA_SDA, 0,
+		GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA), 1);
+	gpio_tlmm_config(GPIO_CFG(GPIO_IRDA_SCL, 0,
+		GPIO_CFG_OUTPUT,	GPIO_CFG_NO_PULL, GPIO_CFG_2MA), 1);
+
+	gpio_request(GPIO_CRESET_B, "irda_creset");
+	gpio_direction_output(GPIO_CRESET_B, 0);
+	gpio_request(GPIO_FPGA_RST_N, "irda_wake");
+	gpio_direction_output(GPIO_FPGA_RST_N, 0);
+	gpio_request(GPIO_IRDA_IRQ, "irda_irq");
+	gpio_direction_input(GPIO_IRDA_IRQ);
+	gpio_request(GPIO_IRDA_EN, "irda_en");
+	gpio_tlmm_config(GPIO_CFG(GPIO_IRDA_EN, 0,
+		GPIO_CFG_OUTPUT,	GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA), 1);
+}
+
+static void irda_vdd_onoff(bool onoff)
+{
+	if (onoff)
+		gpio_set_value(GPIO_IRDA_EN, 1);
+	else
+		gpio_set_value(GPIO_IRDA_EN, 0);
+}
+#endif
 #ifdef CONFIG_KERNEL_MSM_CONTIG_MEM_REGION
 static unsigned msm_contig_mem_size = MSM_CONTIG_MEM_SIZE;
 static int __init msm_contig_mem_size_setup(char *p)
@@ -272,6 +310,7 @@ early_param("msm_contig_mem_size", msm_contig_mem_size_setup);
 #endif
 
 #ifdef CONFIG_MFD_MAX77693
+extern sec_battery_platform_data_t sec_battery_pdata;
 struct max77693_platform_data msm8960_max77693_info = {
 	.irq_base       = IF_PMIC_IRQ_BASE,
 	.irq_gpio       = GPIO_IF_PMIC_IRQ,
@@ -289,9 +328,7 @@ struct max77693_platform_data msm8960_max77693_info = {
 	.led_data = &max77693_led_pdata,
 #endif
 #ifdef CONFIG_CHARGER_MAX77XXX
-#if !defined(CONFIG_MACH_LT02_CHN_CTC)
 	.charger_data = &sec_battery_pdata,
-#endif
 #endif
 };
 
@@ -321,6 +358,7 @@ static struct i2c_board_info max77693_i2c_board_info[] = {
 };
 #endif
 
+static struct msm_otg_platform_data msm_otg_pdata;
 int msm8930_get_board_rev(void) {return (int)system_rev; }
 #ifdef CONFIG_USB_SWITCH_TSU6721
 static enum cable_type_t set_cable_status;
@@ -398,6 +436,16 @@ static void tsu6721_callback(enum cable_type_t cable_type, int attached)
 	case CABLE_TYPE_CDP:
 		pr_info("%s USB CDP is %s\n",
 			__func__, attached ? "attached" : "detached");
+		sec_otg_set_vbus_state(attached);
+		if (attached) {
+			msleep(150);
+			ret = (int)msm_otg_pdata.get_usb_state(attached);
+			pr_info("%s ret = [%d]", __func__, ret);
+			if (ret == 1) {
+				pr_info("%s It is not CDP, set type is AC", __func__);
+				set_cable_status = CABLE_TYPE_AC;
+			}
+		}
 		break;
 	case CABLE_TYPE_OTG:
 		pr_info("%s OTG is %s\n",
@@ -421,7 +469,7 @@ static void tsu6721_callback(enum cable_type_t cable_type, int attached)
 			__func__, attached ? "attached" : "detached");
 		switch_set_state(&switch_dock, attached);
 		break;
-	case CABLE_TYPE_INCOMPATIBLE:		
+	case CABLE_TYPE_INCOMPATIBLE:
 		pr_info("%s Incompatible Charger is %s\n",
 			__func__, attached ? "attached" : "detached");
 		break;
@@ -461,7 +509,7 @@ static void tsu6721_callback(enum cable_type_t cable_type, int attached)
 		return;
 	}
 	current_cable_type = value.intval;
-	
+
 	for (i = 0; i < BATT_SEARCH_CNT_MAX; i++) {
 		psy = power_supply_get_by_name("battery");
 		if (psy)
@@ -788,6 +836,75 @@ static struct i2c_board_info mhl_i2c_board_info[] = {
 };
 #endif /*defined(CONFIG_VIDEO_MHL_V2)*/
 
+#ifdef CONFIG_SENSORS_AD7146
+static struct i2c_gpio_platform_data ad7146_i2c_gpio_data = {
+	.sda_pin = GPIO_GRIP_SDA,
+	.scl_pin = GPIO_GRIP_SCL,
+	.udelay	= 1,
+};
+
+static struct platform_device ad7146_i2c_gpio_device = {
+	.name = "i2c-gpio",
+	.id = MSM_GRIP_I2C_BUS_ID,
+	.dev = {
+		.platform_data  = &ad7146_i2c_gpio_data,
+	},
+};
+
+static struct ad7146_platform_data ad7146_i2c_platform_data = {
+    .regs =  {
+//Samsung GT - Latest Implementation 1.3 version - Initialization settings
+0x0080FFFF, 0x00811FEF, 0x0082C6AF, 0x00832626,
+0x00840EB3, 0x00850EB3, 0x0086013A, 0x0087013A,
+0x0000C20C, 0x00010000, 0x000200FB, 0x000303FF,
+0x0004FFFF, 0x00010000, 0x0000C20E, 0x00450D00,
+0x00050000, 0x00060000, 0x00070000, 0x00010000,
+	},
+	.normal_regs = {
+//Samsung GT - Latest Implementation 1.3 version - Normal State settings
+0x0000C20E, 0x00010000, 0x000200FB, 0x000303FF,
+0x0004FFFF, 0x00450D00, 0x00050001, 0x00060001,
+0x00070000, 0x00010001,
+	},
+	.fixed_th_full = 26000,
+};
+
+static struct i2c_board_info grip_i2c_board_info[] __initdata = {
+	{
+		I2C_BOARD_INFO("ad7146_SAR", 0x2c),
+		.irq = GPIO_GRIP_INT,
+		.platform_data = (void *)&ad7146_i2c_platform_data,
+	},
+};
+
+static int __init ad7146_device_init(void) {
+	static struct regulator *vgrip_2p85;
+	int ret = 0;
+
+	vgrip_2p85 = regulator_get(NULL, "8917_l22");
+	if (IS_ERR(vgrip_2p85))
+		return -ENOENT;
+
+	ret = regulator_set_voltage(vgrip_2p85, 2850000, 2850000);
+	if (ret)
+		pr_err("%s: error vgrip_2p85 setting voltage ret=%d\n",
+			__func__, ret);
+
+	ret = regulator_enable(vgrip_2p85);
+		if (ret)
+			pr_err("%s: error enablinig regulator\n", __func__);
+
+	regulator_put(vgrip_2p85);
+
+	gpio_tlmm_config(GPIO_CFG(GPIO_GRIP_INT, 0, GPIO_CFG_INPUT,
+		GPIO_CFG_PULL_UP, GPIO_CFG_2MA), 1);
+	gpio_tlmm_config(GPIO_CFG(GPIO_GRIP_SDA, 0, GPIO_CFG_INPUT,
+		GPIO_CFG_NO_PULL, GPIO_CFG_2MA), 1);
+	gpio_tlmm_config(GPIO_CFG(GPIO_GRIP_SCL, 0, GPIO_CFG_INPUT,
+		GPIO_CFG_NO_PULL, GPIO_CFG_2MA), 1);
+	return 0;
+}
+#endif
 #if defined(CONFIG_INPUT_YAS_SENSORS) || defined(CONFIG_OPTICAL_GP2AP020A00F)
 enum {
 	SNS_PWR_OFF,
@@ -1921,6 +2038,7 @@ static struct slim_boardinfo msm_slim_devices[] = {
 };
 #endif
 
+#ifdef CONFIG_WCD9306_CODEC
 #ifndef CONFIG_SLIMBUS_MSM_CTRL
 #define TAPAN_I2C_SLAVE_ADDR	0x0d
 #define TAPAN_ANALOG_I2C_SLAVE_ADDR	0x77
@@ -1945,6 +2063,7 @@ static struct i2c_board_info tapan_device_info[] __initdata = {
 		.platform_data = &tapan_i2c_platform_data,
 	},
 };
+#endif
 #endif
 
 #define MSM_WCNSS_PHYS	0x03000000
@@ -2555,6 +2674,29 @@ static struct msm_bus_scale_pdata usb_bus_scale_pdata = {
 };
 #endif
 
+static int sec_charger_vbus_power(bool on)
+{
+	union power_supply_propval	value;
+	struct power_supply *psy;
+	int cable_type;
+	int ret;
+
+	psy = power_supply_get_by_name("battery");
+	if (!psy) {
+		pr_err("couldn't get battery power supply\n");
+		return -1;
+	}
+
+	cable_type = on ? POWER_SUPPLY_TYPE_OTG : POWER_SUPPLY_TYPE_BATTERY;
+	pr_info("sec_charger_vbus_power : %d\n", on);
+
+	value.intval = cable_type << ONLINE_TYPE_MAIN_SHIFT;
+	ret = psy->set_property(psy, POWER_SUPPLY_PROP_ONLINE, &value);
+
+	return ret;
+}
+
+
 static int hsusb_phy_init_seq[] = {
 	0x44, 0x80, /* set VBUS valid threshold
 			and disconnect valid threshold */
@@ -2567,7 +2709,7 @@ static int hsusb_phy_init_seq[] = {
 
 static struct msm_otg_platform_data msm_otg_pdata = {
 	.mode				= USB_OTG,
-	.otg_control		= OTG_PMIC_CONTROL,
+	.otg_control		= OTG_PHY_CONTROL,
 	.phy_type			= SNPS_28NM_INTEGRATED_PHY,
 	.pmic_id_irq		= PM8038_USB_ID_IN_IRQ(PM8038_IRQ_BASE),
 	.power_budget		= 750,
@@ -2578,6 +2720,10 @@ static struct msm_otg_platform_data msm_otg_pdata = {
 	.mhl_dev_name		= "sii8334",
 #endif
 	.mpm_otgsessvld_int	= MSM_MPM_PIN_USB1_OTGSESSVLD,
+	.vbus_power			= sec_charger_vbus_power,
+#ifdef CONFIG_USB_SWITCH_TSU6721
+	.get_usb_state		= msm_otg_get_usb_state,
+#endif
 };
 #include "board-8930-otg.c"
 #endif
@@ -2986,6 +3132,155 @@ static struct msm_i2c_platform_data msm8960_i2c_qup_gsbi8_pdata = {
 	.src_clk_rate = 24000000,
 };
 #endif
+#ifdef CONFIG_SEC_FPGA
+static struct regulator *barcode_vreg_l25;
+static struct regulator *barcode_vreg_l35;
+static struct regulator *barcode_vreg_1p8;
+static struct msm_xo_voter *fpga_xo;
+static int ice4_clock_en(int onoff)
+{
+	if (onoff)
+		msm_xo_mode_vote(fpga_xo, MSM_XO_MODE_ON);
+	else
+		msm_xo_mode_vote(fpga_xo, MSM_XO_MODE_OFF);
+	return 0;
+}
+static void barcode_emul_poweron(int onoff)
+{
+	int ret;
+
+	pr_info("%s onoff : %d\n", __func__, onoff);
+
+	if (barcode_vreg_l25 == NULL) {
+		barcode_vreg_l25 = regulator_get(NULL,
+							"8917_l25");
+		if (IS_ERR(barcode_vreg_l25))
+			return ;
+		ret = regulator_set_voltage(barcode_vreg_l25,
+						1250000, 1250000);
+		if (ret)
+			pr_err("%s: error vreg_l25 set voltage ret=%d\n",
+							__func__, ret);
+	}
+	if (barcode_vreg_l35 == NULL) {
+		barcode_vreg_l35 = regulator_get(NULL,
+							"8917_l35");
+		if (IS_ERR(barcode_vreg_l35))
+			return ;
+		ret = regulator_set_voltage(barcode_vreg_l35,
+						3300000, 3300000);
+		if (ret)
+			pr_err("%s: error vreg_l35 set voltage ret=%d\n",
+							__func__, ret);
+	}
+
+	if (barcode_vreg_1p8 == NULL) {
+		barcode_vreg_1p8 = regulator_get(NULL, "8917_s4");
+		if (IS_ERR(barcode_vreg_1p8))
+			return ;
+	}
+
+	if (onoff) {
+		ret = regulator_enable(barcode_vreg_l25);
+		if (ret)
+			pr_err("%s: error enabling regulator\n",
+							__func__);
+		ret = regulator_enable(barcode_vreg_l35);
+		if (ret)
+			pr_err("%s: error enabling regulator\n",
+							__func__);
+		pr_info("%s gpio switch on\n", __func__);
+
+		ret = regulator_enable(barcode_vreg_1p8);
+		if (ret)
+			pr_err("%s: error enabling regulator\n", __func__);
+
+		fpga_xo = msm_xo_get(MSM_XO_TCXO_D1, "ice4_fpga");
+		if (IS_ERR(fpga_xo)) {
+			printk(KERN_ERR "%s: Couldn't get TCXO_D0 vote for ice4_fpga\n",
+					__func__);
+		}
+	} else {
+		msm_xo_put(fpga_xo);
+
+		if (regulator_is_enabled(barcode_vreg_1p8)) {
+			ret = regulator_disable(barcode_vreg_1p8);
+			if (ret)
+				pr_err("%s: error disabling regulator\n",
+				__func__);
+		}
+		if (regulator_is_enabled(barcode_vreg_l25)) {
+			ret = regulator_disable(barcode_vreg_l25);
+			if (ret)
+				pr_err("%s: error disabling regulator\n",
+						__func__);
+		}
+		if (regulator_is_enabled(barcode_vreg_l35)) {
+			ret = regulator_disable(barcode_vreg_l35);
+			if (ret)
+				pr_err("%s: error disabling regulator\n",
+						__func__);
+		}
+	}
+}
+
+static void barcode_gpio_config(void);
+
+struct barcode_emul_platform_data barcode_emul_info = {
+	.spi_en  = -1,
+	.cresetb = GPIO_CRESET_B,
+	.rst_n   = GPIO_FPGA_RST_N,
+#ifndef CONFIG_NO_GPIO_EXPANDER_FPGA
+	.cdone	 = GPIO_FPGA_CDONE,
+#endif
+	.clock_en = ice4_clock_en,
+	.poweron = barcode_emul_poweron,
+	.gpioconfig = barcode_gpio_config,
+	.spi_clk = GPIO_IRDA_SCL,
+	.spi_si  = GPIO_IRDA_SDA,
+#if defined(CONFIG_IR_REMOCON_FPGA)
+	.ir_remote_init = irda_device_init,
+	.irda_wake = GPIO_FPGA_RST_N,
+	.irda_irq = GPIO_IRDA_IRQ,
+	.ir_wake_en = irda_wake_en,
+	.ir_vdd_onoff = irda_vdd_onoff,
+#endif
+};
+
+static void barcode_gpio_config(void)
+{
+	pr_info("%s\n", __func__);
+
+	gpio_tlmm_config(GPIO_CFG(GPIO_CRESET_B, 0, GPIO_CFG_OUTPUT,
+		GPIO_CFG_NO_PULL, GPIO_CFG_2MA), 1);
+
+	barcode_emul_info.fw_type = ICE_IRDA_SERRANO;
+}
+
+static struct i2c_gpio_platform_data ice4_fpga_i2c_gpio_data = {
+#if defined(CONFIG_IR_REMOCON_FPGA)
+	.sda_pin		= GPIO_IRDA_SDA,
+	.scl_pin		= GPIO_IRDA_SCL,
+	.udelay = 2,
+	.sda_is_open_drain = 0,
+	.scl_is_open_drain = 0,
+	.scl_is_output_only = 0,
+#endif
+};
+
+struct platform_device ice4_fpga_i2c_gpio_device = {
+	.name = "i2c-gpio",
+	.id = MSM_SEC_FPGA_I2C_BUS_ID,
+	.dev.platform_data = &ice4_fpga_i2c_gpio_data,
+};
+
+static struct i2c_board_info ice4_fpga_i2c_board_info[] = {
+	{
+		I2C_BOARD_INFO("ice4", (0x6c)),
+		.platform_data = &barcode_emul_info,
+	},
+};
+#endif
 
 static struct msm_i2c_platform_data msm8960_i2c_qup_gsbi9_pdata = {
 	.clk_freq = 100000,
@@ -3355,7 +3650,10 @@ static struct platform_device *common_devices[] __initdata = {
 	&msm8930_device_qup_spi_gsbi1,
 #endif	
 #if defined(CONFIG_QSEECOM)
-		&qseecom_device,
+	&qseecom_device,
+#endif
+#ifdef CONFIG_SEC_FPGA
+	&ice4_fpga_i2c_gpio_device,
 #endif
 
 #if defined(CONFIG_CRYPTO_DEV_QCRYPTO) || \
@@ -3441,6 +3739,9 @@ static struct platform_device *common_devices[] __initdata = {
 #endif
 #ifdef CONFIG_MFD_MAX77693
 	&max77693_i2c_gpio_device,
+#endif
+#ifdef CONFIG_SENSORS_AD7146
+	&ad7146_i2c_gpio_device,
 #endif
 };
 
@@ -3744,12 +4045,14 @@ static struct i2c_registry msm8930_i2c_devices[] __initdata = {
 		ARRAY_SIZE(nfc_bcm2079x_info),
 	},
 #endif
+#ifdef CONFIG_WCD9306_CODEC
 #ifndef CONFIG_SLIMBUS_MSM_CTRL
 	{
 		MSM_8960_GSBI8_QUP_I2C_BUS_ID,
 		tapan_device_info,
 		ARRAY_SIZE(tapan_device_info),
 	},
+#endif
 #endif
 #ifdef CONFIG_2MIC_ES305
 	{
@@ -3774,6 +4077,20 @@ static struct i2c_registry msm8930_i2c_devices[] __initdata = {
 		MSM_8930_GSBI9_QUP_I2C_BUS_ID,
 		sii_device_info,
 		ARRAY_SIZE(sii_device_info),
+	},
+#endif
+#ifdef CONFIG_SEC_FPGA
+	{
+		MSM_SEC_FPGA_I2C_BUS_ID,
+		ice4_fpga_i2c_board_info,
+		ARRAY_SIZE(ice4_fpga_i2c_board_info),
+	},
+#endif
+#ifdef CONFIG_SENSORS_AD7146
+	{
+		MSM_GRIP_I2C_BUS_ID,
+		grip_i2c_board_info,
+		ARRAY_SIZE(grip_i2c_board_info),
 	},
 #endif
 };
@@ -4089,6 +4406,9 @@ void __init msm8930_lt02_init(void)
 #endif
 #ifdef CONFIG_INPUT_YAS_SENSORS
 	sensor_device_init();
+#endif
+#ifdef CONFIG_SENSORS_AD7146
+	ad7146_device_init();
 #endif
 #if  defined(CONFIG_OPTICAL_GP2AP020A00F) || defined(CONFIG_PROXIMITY_SENSOR)
 	opt_init();

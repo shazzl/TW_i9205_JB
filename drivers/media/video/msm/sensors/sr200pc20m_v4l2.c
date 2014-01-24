@@ -80,9 +80,11 @@ DEFINE_MUTEX(sr200pc20m_mut);
 
 static unsigned int config_csi2;
 static unsigned int stop_stream;
-
+#if defined(CONFIG_MACH_CRATER_CHN_CTC)
+static struct regulator *l35,*l36;
+#else
 static struct regulator *l29, *l32, *l34,*l35;
-
+#endif
 #ifdef CONFIG_LOAD_FILE
 
 void sr200pc20m_regs_table_init(void)
@@ -638,6 +640,7 @@ static void sr200pc20m_set_init_mode(void)
 	sr200pc20m_ctrl->op_mode = CAMERA_MODE_INIT;
 	sr200pc20m_ctrl->mirror_mode = 0;
 	sr200pc20m_ctrl->vtcall_mode = 0;
+	sr200pc20m_ctrl->settings.preview_size_idx = 0;
 }
 void sr200pc20m_set_preview_size(int32_t index)
 {
@@ -940,6 +943,24 @@ static int sr200pc20m_sensor_power_up(struct msm_sensor_ctrl_t *s_ctrl)
 	if (socinfo_get_pmic_model() == PMIC_MODEL_PM8917) {
 #if 1
 		int ret = 0;
+#if defined(CONFIG_MACH_CRATER_CHN_CTC)
+	/*Power on the LDOs */
+		
+	      gpio_tlmm_config(GPIO_CFG(GPIO_CAM_SENSOR_EN, 0,
+					GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA),
+					GPIO_CFG_ENABLE);
+
+		gpio_tlmm_config(GPIO_CFG(GPIO_VT_STBY, 0,
+			GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA),
+			GPIO_CFG_ENABLE);
+		gpio_tlmm_config(GPIO_CFG(GPIO_CAM2_RST_N, 0,				
+			GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA),			
+			GPIO_CFG_ENABLE);
+
+		gpio_set_value_cansleep(GPIO_CAM_SENSOR_EN, 0);
+		gpio_set_value_cansleep(GPIO_VT_STBY, 0);
+		gpio_set_value_cansleep(GPIO_CAM2_RST_N, 0);
+#else
 		/* CAM_ISP_CORE_1P2 */
 		gpio_tlmm_config(GPIO_CFG(GPIO_CAM_IO_EN, 0, GPIO_CFG_OUTPUT,
 			GPIO_CFG_PULL_DOWN, GPIO_CFG_16MA), GPIO_CFG_ENABLE);
@@ -987,8 +1008,49 @@ static int sr200pc20m_sensor_power_up(struct msm_sensor_ctrl_t *s_ctrl)
 		mdelay(5);
 #endif
 #endif
+#endif
+#if defined (CONFIG_MACH_CRATER_CHN_CTC)
 
+             //IO->AVDD->DVDD->VT STBY->MCLK->RST->I2C command
+		//IO 1.8
+		l36 = regulator_get(NULL, "8917_l36");
+		if(IS_ERR(l36))
+			cam_err("[CAM_IO_1P8]::regulator_get l36 fail\n");
+		ret = regulator_set_voltage(l36 , 1800000, 1800000);
+		if (ret)
+			cam_err("[CAM_IO_1P8]::error setting voltage\n");
+		ret = regulator_enable(l36);
+		if (ret)
+			cam_err("[CAM_IO_1P8]::SET Fail\n");
+		else
+			cam_err("[CAM_IO_1P8]::SET OK\n");
+               msleep(2);
 
+		//AVDD 2.8
+		gpio_set_value_cansleep(GPIO_CAM_SENSOR_EN, 1);
+		ret = gpio_get_value(GPIO_CAM_SENSOR_EN);
+		if (ret)
+			cam_err("[CAM2_AVDD_2P8::ret::%d]::Set OK\n", ret);
+		else
+			cam_err("[CAM2_AVDD_2P8]::Set Fail\n");
+	      msleep(2);
+		
+		//DVDD 1.8
+		l35 = regulator_get(NULL, "8917_l35");
+		if(IS_ERR(l35))
+			cam_err("[CAM_DVDD_1P8]::regulator_get l35 fail\n");
+		ret = regulator_set_voltage(l35 , 1800000, 1800000);
+		if (ret)
+			cam_err("[CAM_DVDD_1P8]::error setting voltage\n");
+		ret = regulator_enable(l35);
+		if (ret)
+			cam_err("[CAM_DVDD_1P8]::SET Fail\n");
+		else
+			cam_err("[CAM_DVDD_1P8]::SET OK\n");
+              msleep(5);
+              
+
+#else
 		/*Sensor AVDD 2.8V - CAM_SENSOR_A2P8 */
 		l32 = regulator_get(NULL, "8917_l32");
 		ret = regulator_set_voltage(l32 , 2800000, 2800000);
@@ -1043,8 +1105,19 @@ static int sr200pc20m_sensor_power_up(struct msm_sensor_ctrl_t *s_ctrl)
 		else
 			cam_err("[CAM_SENSOR_IO_1P8]::SET OK\n");
 		mdelay(5);
+#endif
 
-
+#if defined(CONFIG_MACH_CRATER_CHN_CTC)
+		/* VT STBY */
+		gpio_set_value_cansleep(GPIO_VT_STBY, 1);
+		ret = gpio_get_value(GPIO_VT_STBY );
+		cam_err("check VT standby ccc: %d", ret);
+		if (ret)
+			cam_err("[CAM2_VT_STBY::ret::%d]::Set OK\n", ret);
+		else
+			cam_err("[CAM2_VT_STBY]::Set Fail\n");
+		msleep(5);
+#endif
 	/*Set Sub clock */
 		gpio_tlmm_config(GPIO_CFG(GPIO_SUB_CAM_MCLK, 2,
 			GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA),
@@ -1056,16 +1129,20 @@ static int sr200pc20m_sensor_power_up(struct msm_sensor_ctrl_t *s_ctrl)
 			s_ctrl->cam_clk, ARRAY_SIZE(cam_clk_info), 1);
 		if (rc < 0)
 			cam_err("[CAM_MCLK0]::SET Fail\n");
+#if defined(CONFIG_MACH_CRATER_CHN_CTC)	
+              msleep(50);
+#else
 		usleep(1*1000);
+#endif
 
 	if (rc != 0)
 		goto FAIL_END;
-
+#if !defined(CONFIG_MACH_CRATER_CHN_CTC)
 
 		/* CAM2_RST_N */
 		gpio_tlmm_config(GPIO_CFG(GPIO_CAM2_RST_N, 0, GPIO_CFG_OUTPUT,
 			GPIO_CFG_PULL_DOWN, GPIO_CFG_16MA), GPIO_CFG_ENABLE);
-
+#endif
 	gpio_set_value_cansleep(GPIO_CAM2_RST_N, 1);
 		ret = gpio_get_value(GPIO_CAM2_RST_N);
 		if (ret)
@@ -1384,7 +1461,7 @@ static int sr200pc20m_sensor_power_down(struct msm_sensor_ctrl_t *s_ctrl)
 		dev = &s_ctrl->sensor_i2c_client->client->dev;
 
 	if (socinfo_get_pmic_model() == PMIC_MODEL_PM8917) {
-
+#if !defined(CONFIG_MACH_CRATER_CHN_CTC)
 		/*PMIC8917_L34 - CAM_SENSOR_IO_1P8  */
 		l34 = regulator_get(NULL, "8917_l34");
 		if (l34) {
@@ -1395,7 +1472,7 @@ static int sr200pc20m_sensor_power_down(struct msm_sensor_ctrl_t *s_ctrl)
 				cam_err("[CAM_SENSOR_IO_1P8]::OFF OK\n");
 		}
 		udelay(1000);
-
+#endif
 		/*GPIO76 - CAM2_RST_N*/
 		gpio_set_value_cansleep(GPIO_CAM2_RST_N, 0);
 		ret = gpio_get_value(GPIO_CAM2_RST_N);
@@ -1403,8 +1480,13 @@ static int sr200pc20m_sensor_power_down(struct msm_sensor_ctrl_t *s_ctrl)
 			cam_err("[CAM2_RST_N::ret::%d]::OFF OK\n", ret);
 		else
 			cam_err("[CAM2_RST_N]::OFF Fail\n");
+#if defined(CONFIG_MACH_CRATER_CHN_CTC)
+            //RST->MCLK->VT STBY->DVDD->AVDD->IO
+             msleep(5);
+#else
 		udelay(1000);
-
+#endif
+#if !defined(CONFIG_MACH_CRATER_CHN_CTC)
 #if defined(CONFIG_MACH_KS02)
 		/*PMIC8917_L34 - CAM_SENSOR_IO_1P8	*/
 		sub_ldo4 = regulator_get(NULL, "lp8720_ldo4");
@@ -1477,6 +1559,7 @@ static int sr200pc20m_sensor_power_down(struct msm_sensor_ctrl_t *s_ctrl)
 		ret = gpio_get_value(GPIO_VT_STBY );
 		cam_err("check VT standby ccc: %d", ret);
 		usleep(30);
+#endif
 	/*CAM_MCLK0*/
 	msm_cam_clk_enable(dev, cam_clk_info,
 		s_ctrl->cam_clk, ARRAY_SIZE(cam_clk_info), 0);
@@ -1488,7 +1571,51 @@ static int sr200pc20m_sensor_power_down(struct msm_sensor_ctrl_t *s_ctrl)
 	gpio_tlmm_config(GPIO_CFG(GPIO_SUB_CAM_MCLK, 0,
 		GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA),
 		GPIO_CFG_ENABLE);
+#if defined(CONFIG_MACH_CRATER_CHN_CTC)
+              msleep(5);
+		/*STBY*/
+              gpio_set_value_cansleep(GPIO_VT_STBY,0);
+		ret = gpio_get_value(GPIO_VT_STBY );
+		if (!ret)
+			cam_err("[CAM2_VT_STBY_N::ret::%d]::OFF OK\n", ret);
+		else
+			cam_err("[CAM2_VT_STBY_N]::OFF Fail\n");
+		mdelay(5);
+		/*DVDD*/
+		l35 = regulator_get(NULL, "8917_l35");
+		if (IS_ERR(l35)) 
+			cam_err("[CAM_SENSOR_DVDD_1P8]::regulator_get l35 fail\n");
+		
+		ret = regulator_disable(l35);
+		if (ret)
+			cam_err("[CAM_SENSOR_DVDD_1P8]::OFF Fail\n");
+		else
+			cam_err("[CAM_SENSOR_DVDD_1P8]::OFF OK\n");
+               mdelay(5);   
 
+		/*AVDD*/
+		gpio_set_value_cansleep(GPIO_CAM_SENSOR_EN, 0);
+		ret = gpio_get_value(GPIO_CAM_SENSOR_EN);
+		if (!ret)
+			cam_err("[CAM2_SENSOR_AVDD_1::ret::%d]::OFF OK\n", ret);
+		else
+			cam_err("[CAM2_SENSOR_AVDD_1]::OFF Fail\n");
+		mdelay(5);
+
+		/*IO*/
+		l36 = regulator_get(NULL, "8917_l36");
+		if (IS_ERR(l36)) 
+			cam_err("[CAM_SENSOR_IO_1P8]::regulator_get l36 fail\n");
+		
+		ret = regulator_disable(l36);
+		if (ret)
+			cam_err("[CAM_SENSOR_IO_1P8]::OFF Fail\n");
+		else
+			cam_err("[CAM_SENSOR_IO_1P8]::OFF OK\n");
+               usleep(1000);   
+}            
+
+#else
 l35 = regulator_get(NULL, "8917_l35");
 			if (l35) {
 				ret = regulator_disable(l35);
@@ -1498,6 +1625,17 @@ l35 = regulator_get(NULL, "8917_l35");
 					cam_err("[CAM_SENSOR_IO1.8]::OFF OK\n");
 				}
 		mdelay(5);
+/* CAM_ISP_CORE_1P2 */
+		gpio_tlmm_config(GPIO_CFG(GPIO_CAM_IO_EN, 0, GPIO_CFG_OUTPUT,
+			GPIO_CFG_PULL_DOWN, GPIO_CFG_16MA), GPIO_CFG_ENABLE);
+		gpio_set_value_cansleep(GPIO_CAM_IO_EN, 0);
+		ret = gpio_get_value(GPIO_CAM_IO_EN);
+		if (!ret)
+		cam_err("[CAM_CORE_EN::CAM_ISP_CORE_1P2::ret::%d]::Disable OK\n", ret);
+		else
+		cam_err("[CAM_CORE_EN::CAM_ISP_CORE_1P2]::Disable Fail\n");
+		usleep(1*1000);
+#endif
 
 	return rc;
 }
@@ -1571,6 +1709,14 @@ void sr200pc20m_sensor_start_stream(struct msm_sensor_ctrl_t *s_ctrl)
 		if (sr200pc20m_ctrl->mirror_mode == 1)
 			sr200pc20m_set_flip(sr200pc20m_ctrl->mirror_mode);
 			*/
+		//Songww 20130504 effect not remain
+		if(sr200pc20m_ctrl->settings.effect!= CAMERA_EFFECT_OFF)	{
+			sr200pc20m_set_effect(sr200pc20m_ctrl->settings.effect);
+		}
+		//Songww 20130504 whitebalance not remain
+		if(sr200pc20m_ctrl->settings.wb != CAMERA_WHITE_BALANCE_AUTO){
+			sr200pc20m_set_whitebalance(sr200pc20m_ctrl->settings.wb);
+		}
 		}
 
 		CAM_DEBUG("MIPI TIMING : 0x1d0e");
@@ -1687,8 +1833,8 @@ probe_failure:
 
 
 static struct msm_sensor_id_info_t sr200pc20m_id_info = {
-	.sensor_id_reg_addr = 0x0,
-	.sensor_id = 0x0074,
+	.sensor_id_reg_addr = 0x04,
+	.sensor_id = 0xb4,
 };
 
 static const struct i2c_device_id sr200pc20m_i2c_id[] = {

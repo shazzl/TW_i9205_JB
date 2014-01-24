@@ -66,8 +66,8 @@
 #define REGS_OPMOD		0x4 /* Write Only */
 #define REGS_CON		0x6 /* Write Only */
 
-#define PROX_NONDETECT	0x2f
-#define PROX_DETECT		0x0f
+#define PROX_NONDETECT	0x40
+#define PROX_DETECT		0x20
 
 
 #ifdef GP2AP002X_PROXIMITY_OFFSET

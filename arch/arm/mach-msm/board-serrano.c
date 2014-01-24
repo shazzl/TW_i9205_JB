@@ -250,9 +250,9 @@ struct sx150x_platform_data msm8930_sx150x_data[] = {
 #define HOLE_SIZE	0x20000
 #define MSM_CONTIG_MEM_SIZE  0x65000
 #ifdef CONFIG_MSM_IOMMU
-#define MSM_ION_MM_SIZE            0x3800000 /* Need to be multiple of 64K */
+#define MSM_ION_MM_SIZE            0x4600000 /* 56MB(0x3800000) -> 70MB */
 #define MSM_ION_SF_SIZE            0x0
-#define MSM_ION_QSECOM_SIZE	0x780000 /* (7.5MB) */
+#define MSM_ION_QSECOM_SIZE	0x1700000 /* 7.5MB(0x780000) -> 23MB */
 #define MSM_ION_HEAP_NUM	8
 #else
 #define MSM_ION_SF_SIZE		MSM_PMEM_SIZE
@@ -464,6 +464,7 @@ static void tsu6721_callback(enum cable_type_t cable_type, int attached)
 	case CABLE_TYPE_CDP:
 		pr_info("%s USB CDP is %s\n",
 			__func__, attached ? "attached" : "detached");
+		sec_otg_set_vbus_state(attached);
 		break;
 	case CABLE_TYPE_OTG:
 		pr_info("%s OTG is %s\n",
@@ -1110,7 +1111,7 @@ static struct gp2ap020_pdata gp2a020_data = {
 	.p_out = GPIO_PROX_INT,
 	.version = GP2AP030,
 	.prox_cal_path = "/efs/prox_cal",
-	.thresh = {0x6, 0x7},
+	.thresh = {0x8, 0xa},
 };
 
 static struct i2c_board_info opt_i2c_board_info[] = {
@@ -1914,9 +1915,15 @@ static struct wcd9xxx_pdata tapan_i2c_platform_data = {
 		.bias1_cfilt_sel = TAPAN_CFILT1_SEL,
 		.bias2_cfilt_sel = TAPAN_CFILT2_SEL,
 		.bias3_cfilt_sel = TAPAN_CFILT3_SEL,
+#if defined(CONFIG_MACH_SERRANO_EUR_3G) || defined(CONFIG_MACH_SERRANO_EUR_LTE)
+		.bias1_cap_mode = MICBIAS_NO_EXT_BYP_CAP,
+		.bias2_cap_mode = MICBIAS_NO_EXT_BYP_CAP,
+		.bias3_cap_mode = MICBIAS_NO_EXT_BYP_CAP,
+#else
 		.bias1_cap_mode = MICBIAS_EXT_BYP_CAP,
 		.bias2_cap_mode = MICBIAS_NO_EXT_BYP_CAP,
 		.bias3_cap_mode = MICBIAS_NO_EXT_BYP_CAP,
+#endif
 	},
 	.regulator = {
 	{
@@ -2743,7 +2750,11 @@ static struct msm_bus_scale_pdata usb_bus_scale_pdata = {
 static int hsusb_phy_init_seq[] = {
 	0x44, 0x80, /* set VBUS valid threshold
 			and disconnect valid threshold */
+#if defined(CONFIG_MACH_SERRANO_EUR_LTE) || defined(CONFIG_MACH_SERRANO_EUR_3G)
+	0x7F, 0x81, /* update DC voltage level */
+#else
 	0x5F, 0x81, /* update DC voltage level */
+#endif
 	0x3C, 0x82, /* set preemphasis and rise/fall time */
 	0x13, 0x83, /* set source impedance adjusment */
 	-1};
@@ -3029,6 +3040,9 @@ static struct gpio_keys_button gpio_keys_button[] = {
 		.wakeup			= 0,
 		.debounce_interval	= 5, /* ms */
 		.desc			= "Vol Up",
+#if defined(CONFIG_KEYBOARD_GPIO_EXTENDED_RESUME_EVENT)
+		.support_evt		= NOT_SUPPORT_RESUME_KEY_EVENT,
+#endif
 	},
 	{
 		.code			= KEY_VOLUMEDOWN,
@@ -3038,6 +3052,9 @@ static struct gpio_keys_button gpio_keys_button[] = {
 		.wakeup			= 0,
 		.debounce_interval	= 5, /* ms */
 		.desc			= "Vol Down",
+#if defined(CONFIG_KEYBOARD_GPIO_EXTENDED_RESUME_EVENT)
+		.support_evt		= NOT_SUPPORT_RESUME_KEY_EVENT,
+#endif
 	},
 	{
 		.code			= KEY_HOMEPAGE,
@@ -3047,6 +3064,9 @@ static struct gpio_keys_button gpio_keys_button[] = {
 		.wakeup			= 1,
 		.debounce_interval	= 5, /* ms */
 		.desc			= "Home",
+#if defined(CONFIG_KEYBOARD_GPIO_EXTENDED_RESUME_EVENT)
+		.support_evt		= SUPPORT_RESUME_KEY_EVENT,
+#endif
 	},
 };
 static struct gpio_keys_platform_data gpio_keys_platform_data = {
@@ -3484,7 +3504,7 @@ static struct platform_device msm8930_device_rpm_regulator __devinitdata = {
 };
 
 #ifdef CONFIG_SAMSUNG_JACK
-#if defined (CONFIG_MACH_SERRANO_ATT)
+#if defined (CONFIG_MACH_SERRANO_ATT) || defined(CONFIG_MACH_SERRANO_VZW)
 static struct sec_jack_zone jack_zones[] = {
 	[0] = {
 		.adc_high	= 3,
@@ -3493,7 +3513,7 @@ static struct sec_jack_zone jack_zones[] = {
 		.jack_type	= SEC_HEADSET_3POLE,
 	},
 	[1] = {
-		.adc_high	= 1000,
+		.adc_high	= 990,
 		.delay_ms	= 10,
 		.check_count	= 10,
 		.jack_type	= SEC_HEADSET_3POLE,
@@ -3522,12 +3542,12 @@ static struct sec_jack_buttons_zone jack_buttons_zones[] = {
 	{
 		.code		= KEY_VOLUMEUP,
 		.adc_low	= 181,
-		.adc_high	= 360,
+		.adc_high	= 370,
 	},
 	{
 		.code		= KEY_VOLUMEDOWN,
-		.adc_low	= 361,
-		.adc_high	= 750,
+		.adc_low	= 371,
+		.adc_high	= 900,
 	},
 };
 
@@ -3539,7 +3559,7 @@ static struct sec_jack_zone jack_zones_rev03[] = {
 		.jack_type	= SEC_HEADSET_3POLE,
 	},
 	[1] = {
-		.adc_high	= 594,
+		.adc_high	= 580,
 		.delay_ms	= 10,
 		.check_count	= 10,
 		.jack_type	= SEC_HEADSET_3POLE,
@@ -3563,29 +3583,29 @@ static struct sec_jack_buttons_zone jack_buttons_zones_rev03[] = {
 	{
 		.code		= KEY_MEDIA,
 		.adc_low	= 0,
-		.adc_high	= 201,
+		.adc_high	= 205,
 	},
 	{
 		.code		= KEY_VOLUMEUP,
-		.adc_low	= 202,
-		.adc_high	= 284,
+		.adc_low	= 206,
+		.adc_high	= 290,
 	},
 	{
 		.code		= KEY_VOLUMEDOWN,
-		.adc_low	= 285,
-		.adc_high	= 440,
+		.adc_low	= 291,
+		.adc_high	= 900,
 	},
 };
 #else
 static struct sec_jack_zone jack_zones[] = {
 	[0] = {
 		.adc_high	= 3,
-		.delay_ms	= 10,
-		.check_count	= 10,
+		.delay_ms	= 20,
+		.check_count	= 20,
 		.jack_type	= SEC_HEADSET_3POLE,
 	},
 	[1] = {
-		.adc_high	= 682,
+		.adc_high	= 685,
 		.delay_ms	= 10,
 		.check_count	= 10,
 		.jack_type	= SEC_HEADSET_3POLE,
@@ -3598,8 +3618,8 @@ static struct sec_jack_zone jack_zones[] = {
 	},
 	[3] = {
 		.adc_high	= 9999,
-		.delay_ms	= 10,
-		.check_count	= 10,
+		.delay_ms	= 20,
+		.check_count	= 20,
 		.jack_type	= SEC_HEADSET_3POLE,
 	},
 };
@@ -3696,12 +3716,12 @@ static struct sec_jack_platform_data sec_jack_data = {
 	.set_micbias_state	= set_sec_micbias_state,
 	.get_adc_value		= sec_jack_get_adc_value,
 	.zones			= jack_zones,
-#ifdef CONFIG_MACH_SERRANO_ATT
+#if defined (CONFIG_MACH_SERRANO_ATT) || defined(CONFIG_MACH_SERRANO_VZW)
 	.zones_rev03		= jack_zones_rev03,
 #endif
 	.num_zones		= ARRAY_SIZE(jack_zones),
 	.buttons_zones		= jack_buttons_zones,
-#ifdef CONFIG_MACH_SERRANO_ATT
+#if defined (CONFIG_MACH_SERRANO_ATT) || defined(CONFIG_MACH_SERRANO_VZW)
 	.buttons_zones_rev03		= jack_buttons_zones_rev03,
 #endif
 	.num_buttons_zones	= ARRAY_SIZE(jack_buttons_zones),
@@ -4649,12 +4669,17 @@ void __init msm8930_serrano_init(void)
 #ifdef CONFIG_SENSORS_HALL
 	hall_ic_init();
 #endif
-#if defined(CONFIG_KEYBOARD_CYPRESS_TOUCH) ||\
-	defined(CONFIG_KEYBOARD_TC360_TOUCHKEY)
-	input_touchkey_init();
+#if defined(CONFIG_KEYBOARD_TC360_TOUCHKEY)
+#ifdef CONFIG_SAMSUNG_LPM_MODE
+	if (!poweroff_charging)
+#endif	
+		input_touchkey_init();
 #endif
-#if defined(CONFIG_TOUCHSCREEN_MXTS) ||defined(CONFIG_TOUCHSCREEN_MXT224E)
-	input_touchscreen_init();
+#if defined(CONFIG_TOUCHSCREEN_MXTS)
+#ifdef CONFIG_SAMSUNG_LPM_MODE
+	if (!poweroff_charging)
+#endif		
+		input_touchscreen_init();
 
 #ifdef CONFIG_MFD_MAX77693
 	gpio_tlmm_config(GPIO_CFG(GPIO_IF_PMIC_IRQ,  0, GPIO_CFG_INPUT,

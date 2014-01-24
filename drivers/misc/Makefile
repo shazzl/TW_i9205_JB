@@ -51,7 +51,7 @@ obj-y				+= lis3lv02d/
 obj-y				+= carma/
 obj-$(CONFIG_USB_SWITCH_FSA9480) += fsa9480.o
 obj-$(CONFIG_NFC_PN544)	+= pn544.o
-obj-$(CONFIG_NFC_PN547)	+= pn544.o
+obj-$(CONFIG_NFC_PN547)	+= pn547.o
 obj-$(CONFIG_SEC_MISC)		+= sec_param.o sec_misc.o
 obj-$(CONFIG_ALTERA_STAPL)	+=altera-stapl/
 obj-$(CONFIG_MAX8997_MUIC)	+= max8997-muic.o
@@ -91,3 +91,6 @@ obj-$(CONFIG_USB_SWITCH_TSU6721)    += tsu6721.o
 obj-$(CONFIG_MFD_MAX77693)	+= max77693-muic.o
 obj-$(CONFIG_LM48560_RCV)	+= lm48560.o
 obj-$(CONFIG_SEC_MODEM) += modem_if/
+ifeq ($(TIMA_ENABLED),1)
+obj-$(CONFIG_TIMA_LOG)		+= tima_debug_log.o
+endif

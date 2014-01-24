@@ -157,6 +157,8 @@ err_logo_close_file:
 	return err;
 }
 EXPORT_SYMBOL(load_565rle_image);
+#define CONFIG_FRAMEBUFFER_CONSOLE
+
 int draw_rgb888_screen(void)
 {
 	struct fb_info *fb = registered_fb[0];
@@ -166,17 +168,9 @@ int draw_rgb888_screen(void)
 #ifndef CONFIG_FRAMEBUFFER_CONSOLE
 		struct module *owner;
 #endif
-	static int test;
-	int err = 0;
-	printk(KERN_WARNING "%s\n", __func__);
 
-	owner = fb->fbops->owner;
-	if (!try_module_get(owner))
-		return -ENODEV;
-	if (fb->fbops->fb_open && fb->fbops->fb_open(fb, 0)) {
-		module_put(owner);
-		return -ENODEV;
-	}
+	pr_info( "##############%s\n", __func__);
+
 #ifndef CONFIG_FRAMEBUFFER_CONSOLE
 		owner = fb->fbops->owner;
 		if (!try_module_get(owner))

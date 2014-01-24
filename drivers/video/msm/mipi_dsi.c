@@ -165,43 +165,71 @@ static int mipi_dsi_off(struct platform_device *pdev)
 
 #ifdef CONFIG_DUAL_LCD
 int mipi_dsi_NULL(int on);
+int cond_mipi_dsi_NULL(void);
+int is_already_updated_disp_switch(void);
+int running_mipi_dsi_NULL(void);
 struct platform_device *mipi_dsi_pdev_switch=NULL;
+
+#if defined(CONFIG_RUNTIME_MIPI_CLK_CHANGE) && defined(CONFIG_FB_MSM_MIPI_AMS367_OLED_VIDEO_WVGA_PT_PANEL)
+int is_S6E88A(void);
+int mipi_AMS367_dynamic_fps_folder(int is_folder_action, struct msm_panel_info *pinfo);
+int mipi_AMS367AV_dynamic_fps_folder(int is_folder_action, struct msm_panel_info *pinfo);
+#endif
+
+/* return : 0 = cannot call mipi_dsi_NULL(), 1 = OK */
+int cond_mipi_dsi_NULL(void)
+{
+	struct msm_fb_data_type *mfd;
+
+	if (mipi_dsi_pdev_switch == NULL) {
+		pr_err( "%s : cancel by NULL\n", __func__ );
+		return 0;
+	}
+
+	mfd = platform_get_drvdata(mipi_dsi_pdev_switch);
+	if (!mfd->panel_power_on) {
+		pr_err("%s : panel status : power off\n", __func__);
+		return 0;
+	}
+
+	if (is_already_updated_disp_switch()) {
+		pr_err( "%s : is_already_updated_disp_switch\n", __func__ );
+		return 0;
+	}
+
+	return 1;
+}
+
+/* return : 1=running, 0=not */
+static int in_mipi_dsi_NULL = false;
+int running_mipi_dsi_NULL(void)
+{
+	return in_mipi_dsi_NULL;
+}
 
 /* return : 0=success, 1=fail
 */
 int mipi_dsi_NULL(int on)
 {
 	int ret = 0;
-	struct msm_fb_data_type *mfd;
 
-	if( mipi_dsi_pdev_switch == NULL )
-	{
-		pr_err( "%s : cancel by NULL\n", __func__ );
-		ret = 1;
-		return ret;
-	}
-	else{
-		mfd = platform_get_drvdata(mipi_dsi_pdev_switch);
-		if(!mfd->panel_power_on)
-		{	pr_err( "%s : panel status : power off\n", __func__ );
-			ret = 1;
-			return ret;
-		}
-	}
+	if (!cond_mipi_dsi_NULL())
+		return 1;
 
-	if( on )
-	{
+	in_mipi_dsi_NULL = true;
+	if (on) {
 		pr_info( "%s : call mipi_dsi_on\n", __func__ );
 		ret = mipi_dsi_on( mipi_dsi_pdev_switch );
-	} else
-	{
+	} else {
 		pr_info( "%s : call mipi_dsi_off\n", __func__ );
 		ret = mipi_dsi_off( mipi_dsi_pdev_switch );
 	}
+	in_mipi_dsi_NULL = false;
 
 	return ret;
 }
 #endif // #ifdef CONFIG_DUAL_LCD
+extern unsigned int system_rev;
 
 static int mipi_dsi_on(struct platform_device *pdev)
 {
@@ -225,8 +253,9 @@ static int mipi_dsi_on(struct platform_device *pdev)
 	pdev_for_esd = pdev;
 #endif
 #ifdef CONFIG_DUAL_LCD
-	mipi_dsi_pdev_switch = pdev;
+	if (mipi_dsi_pdev_switch == NULL)
 	pr_debug( "%s : pdev_switch updated", __func__ );
+	mipi_dsi_pdev_switch = pdev;
 #endif // #ifdef CONFIG_DUAL_LCD
 
 #if defined (CONFIG_FB_MSM_MIPI_SAMSUNG_OLED_VIDEO_QHD_PT)
@@ -242,6 +271,16 @@ static int mipi_dsi_on(struct platform_device *pdev)
 		mipi_dsi_pdata->dsi_power_save(1);
 
 	cont_splash_clk_ctrl(0);
+
+#if defined(CONFIG_MACH_LT02_CHN_CTC)
+	if (mipi_dsi_pdata && mipi_dsi_pdata->active_reset)
+		mipi_dsi_pdata->active_reset(1); /* high */
+	usleep(4000);
+	
+	ret = panel_next_on(pdev);
+
+	usleep(1000);
+#endif
 	mipi_dsi_prepare_clocks();
 
 	mipi_dsi_ahb_ctrl(1);
@@ -260,6 +299,13 @@ static int mipi_dsi_on(struct platform_device *pdev)
 
 #if defined(CONFIG_FB_MSM_MIPI_SAMSUNG_OLED_VIDEO_QHD_PT_PANEL)
 	mipi_dsi_configure_dividers(60);
+#endif
+
+#if defined(CONFIG_RUNTIME_MIPI_CLK_CHANGE) && defined(CONFIG_FB_MSM_MIPI_AMS367_OLED_VIDEO_WVGA_PT_PANEL)
+	if (is_S6E88A())
+		mipi_AMS367AV_dynamic_fps_folder(in_mipi_dsi_NULL, pinfo);
+	else
+		mipi_AMS367_dynamic_fps_folder(in_mipi_dsi_NULL, pinfo);
 #endif
 
 	MIPI_OUTP(MIPI_DSI_BASE + 0x114, 1);
@@ -341,12 +387,18 @@ static int mipi_dsi_on(struct platform_device *pdev)
 	wmb();
 	/* LP11 */
 
+#if !defined(CONFIG_MACH_LT02_CHN_CTC)
 	usleep(5000);
 	if (mipi_dsi_pdata && mipi_dsi_pdata->active_reset)
-			mipi_dsi_pdata->active_reset(1); /* high */
+		mipi_dsi_pdata->active_reset(1); /* high */
 	usleep(10000);
-
 #endif
+#endif
+#if defined(CONFIG_MACH_LT02_SPR) || defined(CONFIG_MACH_LT02_ATT)
+		if(system_rev)
+			ret = panel_next_on(pdev);
+#endif
+
 	if (mipi->force_clk_lane_hs) {
 #ifndef CONFIG_MIPI_DSI_RESET_LP11
 		u32 tmp;
@@ -361,9 +413,14 @@ static int mipi_dsi_on(struct platform_device *pdev)
 		mutex_lock(&mfd->dma->ov_mutex);
 	else
 		down(&mfd->dma->mutex);
-
+#if !defined(CONFIG_MACH_LT02_CHN_CTC) 
+#if defined(CONFIG_MACH_LT02_SPR) || defined(CONFIG_MACH_LT02_ATT)
+	if(!system_rev)
+		ret = panel_next_on(pdev);
+#else
 	ret = panel_next_on(pdev);
-
+#endif
+#endif
 	mipi_dsi_op_mode_config(mipi->mode);
 
 	if (mfd->panel_info.type == MIPI_CMD_PANEL) {

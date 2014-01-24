@@ -35,9 +35,11 @@
 	}						\
 	while (0)
 
+#ifdef CONFIG_IMX175
+extern bool Torch_On;
+#endif
 #ifdef CONFIG_MACH_MELIUS
 extern unsigned int system_rev;
-extern bool Torch_On;
 static DEFINE_SPINLOCK(flash_ctrl_lock);
 #endif
 
@@ -438,20 +440,21 @@ int msm_camera_flash_led(
 		unsigned led_state)
 {
 #ifdef CONFIG_IMX175
+#if defined(CONFIG_MACH_MELIUS)
+	int i = 0;
+#endif
 	int rc = 0;
+	if(Torch_On == true) {
+		cam_err("[Assistive Light On!!\n");
+		return 0;
+	}	
 #if defined(CONFIG_MACH_MELIUS)
 	/* FLASH IC : KTD2692 */
-	int i = 0;
-
-	if(Torch_On == true) {
-		cam_err("[Torch_On is enabled!!\n");
-		return 0;
-	}
 	cam_err("[led_state::%d]\n", led_state);
 	switch (led_state) {
 	case MSM_CAMERA_LED_INIT:
 		cam_err("[MSM_CAMERA_LED_INIT]\n");
-#if defined(CONFIG_MACH_MELIUS_VZW) || defined(CONFIG_MACH_MELIUS_SPR) || defined(CONFIG_MACH_MELIUS_USC)
+#if defined(CONFIG_MACH_CRATER_CHN_CTC) || defined(CONFIG_MACH_MELIUS_VZW) || defined(CONFIG_MACH_MELIUS_SPR) || defined(CONFIG_MACH_MELIUS_USC)
 		if (system_rev < 0X01) {
 #else
 		if (system_rev < 0x07) {
@@ -471,7 +474,7 @@ int msm_camera_flash_led(
 
 	case MSM_CAMERA_LED_OFF:
 		cam_err("[MSM_CAMERA_LED_OFF]\n");
-#if defined(CONFIG_MACH_MELIUS_VZW) || defined(CONFIG_MACH_MELIUS_SPR) || defined(CONFIG_MACH_MELIUS_USC)
+#if defined(CONFIG_MACH_CRATER_CHN_CTC) ||  defined(CONFIG_MACH_MELIUS_VZW) || defined(CONFIG_MACH_MELIUS_SPR) || defined(CONFIG_MACH_MELIUS_USC)
 		if (system_rev < 0X01) {
 #else
 		if (system_rev < 0x07) {
@@ -485,7 +488,7 @@ int msm_camera_flash_led(
 	case MSM_CAMERA_LED_LOW:
 		/* Movie Current Setting : 0x64 (5/16) */
 		cam_err("[MSM_CAMERA_LED_LOW]\n");
-#if defined(CONFIG_MACH_MELIUS_VZW) || defined(CONFIG_MACH_MELIUS_SPR) || defined(CONFIG_MACH_MELIUS_USC)
+#if defined(CONFIG_MACH_CRATER_CHN_CTC) || defined(CONFIG_MACH_MELIUS_VZW) || defined(CONFIG_MACH_MELIUS_SPR) || defined(CONFIG_MACH_MELIUS_USC)
 		if (system_rev < 0X01) {
 #else
 		if (system_rev < 0x07) {
@@ -504,7 +507,7 @@ int msm_camera_flash_led(
 
 	case MSM_CAMERA_LED_HIGH:
 		cam_err("[MSM_CAMERA_LED_HIGH]\n");
-#if defined(CONFIG_MACH_MELIUS_VZW) || defined(CONFIG_MACH_MELIUS_SPR) || defined(CONFIG_MACH_MELIUS_USC)
+#if defined(CONFIG_MACH_CRATER_CHN_CTC) || defined(CONFIG_MACH_MELIUS_VZW) || defined(CONFIG_MACH_MELIUS_SPR) || defined(CONFIG_MACH_MELIUS_USC)
 		if (system_rev < 0X01) {
 #else
 		if (system_rev < 0x07) {
@@ -541,7 +544,7 @@ int msm_camera_flash_led(
 		break;
 
 	case MSM_CAMERA_LED_RELEASE:
-		/*C2871YMK_set_flash_flash(0);*/
+		MIC2871YMK_set_flash_flash(0);
 		cam_err("[MSM_CAMERA_LED_RELEASE][MIC2871YMK]\n");
 		break;
 

@@ -571,18 +571,18 @@ int max77693_muic_set_safeout(int path)
 		regulator_put(regulator);
 	} else {
 		/* AP_USB_MODE || AUDIO_MODE */
-		regulator = regulator_get(NULL, "safeout1");
-		if (IS_ERR(regulator))
-			return -ENODEV;
-		if (!regulator_is_enabled(regulator))
-			regulator_enable(regulator);
-		regulator_put(regulator);
-
 		regulator = regulator_get(NULL, "safeout2");
 		if (IS_ERR(regulator))
 			return -ENODEV;
 		if (regulator_is_enabled(regulator))
 			regulator_force_disable(regulator);
+		regulator_put(regulator);
+
+		regulator = regulator_get(NULL, "safeout1");
+		if (IS_ERR(regulator))
+			return -ENODEV;
+		if (!regulator_is_enabled(regulator))
+			regulator_enable(regulator);
 		regulator_put(regulator);
 	}
 
@@ -599,7 +599,12 @@ struct max77693_muic_data max77693_muic = {
 	.set_safeout = max77693_muic_set_safeout,
 	.init_cb = max77693_muic_init_cb,
 	.deskdock_cb = max77693_muic_deskdock_cb,
+#if defined(CONFIG_MACH_MELIUS_SKT) || defined(CONFIG_MACH_MELIUS_KTT) || \
+	defined(CONFIG_MACH_MELIUS_LGT)
+	.cardock_cb = NULL,
+#else
 	.cardock_cb = max77693_muic_cardock_cb,
+#endif
 	.smartdock_cb = max77693_muic_smartdock_cb,
 	.audiodock_cb = max77693_muic_audiodock_cb,
 #ifdef CONFIG_USB_HOST_NOTIFY

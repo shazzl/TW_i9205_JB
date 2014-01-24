@@ -291,29 +291,29 @@ static char NATURAL_UI_2[] = {
 	0x00,
 	0x00, //roi1 y end
 	0x00,
-	0x22, //scr Cr Yb
-	0xef, //scr Rr Bb
-	0xf2, //scr Cg Yg
-	0x12, //scr Rg Bg
-	0xe2, //scr Cb Yr
-	0x0d, //scr Rb Br
-	0xfd, //scr Mr Mb
-	0x1d, //scr Gr Gb
-	0x18, //scr Mg Mg
+	0x1d, //scr Cr Yb
+	0xf0, //scr Rr Bb
+	0xf1, //scr Cg Yg
+	0x13, //scr Rg Bg
+	0xde, //scr Cb Yr
+	0x0f, //scr Rb Br
+	0xfb, //scr Mr Mb
+	0x14, //scr Gr Gb
+	0x17, //scr Mg Mg
 	0xe7, //scr Gg Gg
-	0xf0, //scr Mb Mr
-	0x02, //scr Gb Gr
-	0xf3, //scr Yr Cb
-	0x1a, //scr Br Rb
-	0xf0, //scr Yg Cg
-	0x12, //scr Bg Rg
-	0x24, //scr Yb Cr
-	0xf9, //scr Bb Rr
+	0xe7, //scr Mb Mr
+	0x00, //scr Gb Gr
+	0xf0, //scr Yr Cb
+	0x1c, //scr Br Rb
+	0xf2, //scr Yg Cg
+	0x0c, //scr Bg Rg
+	0x27, //scr Yb Cr
+	0xe8, //scr Bb Rr
 	0xff, //scr Wr Wb
 	0x00, //scr Kr Kb
-	0xfa, //scr Wg Wg
+	0xf9, //scr Wg Wg
 	0x00, //scr Kg Kg
-	0xf5, //scr Wb Wr
+	0xf0, //scr Wb Wr
 	0x00, //scr Kb Kr
 	0x00, //curve 1 b
 	0x0f, //curve 1 a
@@ -532,29 +532,29 @@ static char MOVIE_UI_2[] = {
 	0x00,
 	0x00, //roi1 y end
 	0x00,
-	0x99, //scr Cr Yb
-	0xcf, //scr Rr Bb
-	0xf6, //scr Cg Yg
-	0x1d, //scr Rg Bg
-	0xeb, //scr Cb Yr
-	0x15, //scr Rb Br
+	0x97, //scr Cr Yb
+	0xd2, //scr Rr Bb
+	0xf4, //scr Cg Yg
+	0x19, //scr Rg Bg
+	0xe7, //scr Cb Yr
+	0x16, //scr Rb Br
 	0xdb, //scr Mr Mb
-	0x78, //scr Gr Gb
-	0x2a, //scr Mg Mg
-	0xef, //scr Gg Gg
-	0xf3, //scr Mb Mr
-	0x24, //scr Gb Gr
+	0x70, //scr Gr Gb
+	0x24, //scr Mg Mg
+	0xf0, //scr Gg Gg
+	0xe5, //scr Mb Mr
+	0x22, //scr Gb Gr
 	0xf0, //scr Yr Cb
-	0x1f, //scr Br Rb
+	0x22, //scr Br Rb
 	0xf2, //scr Yg Cg
-	0x17, //scr Bg Rg
-	0x3b, //scr Yb Cr
-	0xf2, //scr Bb Rr
+	0x11, //scr Bg Rg
+	0x40, //scr Yb Cr
+	0xe1, //scr Bb Rr
 	0xff, //scr Wr Wb
 	0x00, //scr Kr Kb
-	0xfa, //scr Wg Wg
+	0xf9, //scr Wg Wg
 	0x00, //scr Kg Kg
-	0xf5, //scr Wb Wr
+	0xf0, //scr Wb Wr
 	0x00, //scr Kb Kr
 	0x00, //curve 1 b
 	0x0f, //curve 1 a
@@ -656,9 +656,9 @@ char AUTO_UI_2[] = {
 	0x00, //scr Cr Yb
 	0xff, //scr Rr Bb
 	0xff, //scr Cg Yg
-	0x00, //scr Rg Bg
+	0x0a, //scr Rg Bg
 	0xff, //scr Cb Yr
-	0x00, //scr Rb Br
+	0x0a, //scr Rb Br
 	0xff, //scr Mr Mb
 	0x00, //scr Gr Gb
 	0x00, //scr Mg Mg
@@ -753,7 +753,7 @@ static char STANDARD_GALLERY_1[] = {
 	0x01, //mdnie_en
 	0x00, //data_width mask 00 000
 	0x33, //scr_roi 1 scr algo_roi 1 algo 00 1 0 00 1 0
-	0x08, //sharpen cc gamma 00 0 0
+	0x04, //sharpen cc gamma 00 0 0
 
 };
 
@@ -779,9 +779,9 @@ static char STANDARD_GALLERY_2[] = {
 	0x00, //scr Cr Yb
 	0xff, //scr Rr Bb
 	0xff, //scr Cg Yg
-	0x00, //scr Rg Bg
+	0x1c, //scr Rg Bg
 	0xff, //scr Cb Yr
-	0x00, //scr Rb Br
+	0x1c, //scr Rb Br
 	0xff, //scr Mr Mb
 	0x00, //scr Gr Gb
 	0x00, //scr Mg Mg
@@ -1231,7 +1231,7 @@ char AUTO_GALLERY_1[] = {
 	0x01, //mdnie_en
 	0x00, //data_width mask 00 000
 	0x33, //scr_roi 1 scr algo_roi 1 algo 00 1 0 00 1 0
-	0x09, //sharpen cc gamma 00 0 0
+	0x05, //sharpen cc gamma 00 0 0
 };
 
 char AUTO_GALLERY_2[] = {
@@ -1256,9 +1256,9 @@ char AUTO_GALLERY_2[] = {
 	0x00, //scr Cr Yb
 	0xff, //scr Rr Bb
 	0xff, //scr Cg Yg
-	0x1c, //scr Rg Bg
+	0x0a, //scr Rg Bg
 	0xff, //scr Cb Yr
-	0x1c, //scr Rb Br
+	0x0a, //scr Rb Br
 	0xff, //scr Mr Mb
 	0x00, //scr Gr Gb
 	0x00, //scr Mg Mg
@@ -1352,7 +1352,7 @@ static char STANDARD_VIDEO_1[] = {
 	0x01, //mdnie_en
 	0x00, //data_width mask 00 000
 	0x33, //scr_roi 1 scr algo_roi 1 algo 00 1 0 00 1 0
-	0x0c, //sharpen cc gamma 00 0 0
+	0x04, //sharpen cc gamma 00 0 0
 };
 
 static char STANDARD_VIDEO_2[] = {
@@ -1377,9 +1377,9 @@ static char STANDARD_VIDEO_2[] = {
 	0x00, //scr Cr Yb
 	0xff, //scr Rr Bb
 	0xff, //scr Cg Yg
-	0x00, //scr Rg Bg
+	0x1c, //scr Rg Bg
 	0xff, //scr Cb Yr
-	0x00, //scr Rb Br
+	0x1c, //scr Rb Br
 	0xff, //scr Mr Mb
 	0x00, //scr Gr Gb
 	0x00, //scr Mg Mg
@@ -1472,7 +1472,7 @@ static char NATURAL_VIDEO_1[] = {
 	0x01, //mdnie_en
 	0x00, //data_width mask 00 000
 	0x33, //scr_roi 1 scr algo_roi 1 algo 00 1 0 00 1 0
-	0x08, //sharpen cc gamma 00 0 0
+	0x04, //sharpen cc gamma 00 0 0
 };
 
 static char NATURAL_VIDEO_2[] = {
@@ -1494,29 +1494,29 @@ static char NATURAL_VIDEO_2[] = {
 	0x00,
 	0x00, //roi1 y end
 	0x00,
-	0x22, //scr Cr Yb
-	0xef, //scr Rr Bb
-	0xf2, //scr Cg Yg
-	0x12, //scr Rg Bg
-	0xe2, //scr Cb Yr
-	0x0d, //scr Rb Br
-	0xfd, //scr Mr Mb
-	0x1d, //scr Gr Gb
-	0x18, //scr Mg Mg
+	0x1d, //scr Cr Yb
+	0xf0, //scr Rr Bb
+	0xf1, //scr Cg Yg
+	0x13, //scr Rg Bg
+	0xde, //scr Cb Yr
+	0x0f, //scr Rb Br
+	0xfb, //scr Mr Mb
+	0x14, //scr Gr Gb
+	0x17, //scr Mg Mg
 	0xe7, //scr Gg Gg
-	0xf0, //scr Mb Mr
-	0x02, //scr Gb Gr
-	0xf3, //scr Yr Cb
-	0x1a, //scr Br Rb
-	0xf0, //scr Yg Cg
-	0x12, //scr Bg Rg
-	0x24, //scr Yb Cr
-	0xf9, //scr Bb Rr
+	0xe7, //scr Mb Mr
+	0x00, //scr Gb Gr
+	0xf0, //scr Yr Cb
+	0x1c, //scr Br Rb
+	0xf2, //scr Yg Cg
+	0x0c, //scr Bg Rg
+	0x27, //scr Yb Cr
+	0xe8, //scr Bb Rr
 	0xff, //scr Wr Wb
 	0x00, //scr Kr Kb
-	0xfa, //scr Wg Wg
+	0xf9, //scr Wg Wg
 	0x00, //scr Kg Kg
-	0xf5, //scr Wb Wr
+	0xf0, //scr Wb Wr
 	0x00, //scr Kb Kr
 	0x00, //curve 1 b
 	0x0f, //curve 1 a
@@ -1592,7 +1592,7 @@ static char DYNAMIC_VIDEO_1[] = {
 	0x01, //mdnie_en
 	0x00, //data_width mask 00 000
 	0x33, //scr_roi 1 scr algo_roi 1 algo 00 1 0 00 1 0
-	0x0f, //sharpen cc gamma 00 0 0
+	0x07, //sharpen cc gamma 00 0 0
 };
 
 static char DYNAMIC_VIDEO_2[] = {
@@ -1713,7 +1713,7 @@ static char MOVIE_VIDEO_1[] = {
 	0x01, //mdnie_en
 	0x00, //data_width mask 00 000
 	0x33, //scr_roi 1 scr algo_roi 1 algo 00 1 0 00 1 0
-	0x08, //sharpen cc gamma 00 0 0
+	0x04, //sharpen cc gamma 00 0 0
 };
 
 static char MOVIE_VIDEO_2[] = {
@@ -1735,29 +1735,29 @@ static char MOVIE_VIDEO_2[] = {
 	0x00,
 	0x00, //roi1 y end
 	0x00,
-	0x99, //scr Cr Yb
-	0xcf, //scr Rr Bb
-	0xf6, //scr Cg Yg
-	0x1d, //scr Rg Bg
-	0xeb, //scr Cb Yr
-	0x15, //scr Rb Br
+	0x97, //scr Cr Yb
+	0xd2, //scr Rr Bb
+	0xf4, //scr Cg Yg
+	0x19, //scr Rg Bg
+	0xe7, //scr Cb Yr
+	0x16, //scr Rb Br
 	0xdb, //scr Mr Mb
-	0x78, //scr Gr Gb
-	0x2a, //scr Mg Mg
-	0xef, //scr Gg Gg
-	0xf3, //scr Mb Mr
-	0x24, //scr Gb Gr
+	0x70, //scr Gr Gb
+	0x24, //scr Mg Mg
+	0xf0, //scr Gg Gg
+	0xe5, //scr Mb Mr
+	0x22, //scr Gb Gr
 	0xf0, //scr Yr Cb
-	0x1f, //scr Br Rb
+	0x22, //scr Br Rb
 	0xf2, //scr Yg Cg
-	0x17, //scr Bg Rg
-	0x3b, //scr Yb Cr
-	0xf2, //scr Bb Rr
+	0x11, //scr Bg Rg
+	0x40, //scr Yb Cr
+	0xe1, //scr Bb Rr
 	0xff, //scr Wr Wb
 	0x00, //scr Kr Kb
-	0xfa, //scr Wg Wg
+	0xf9, //scr Wg Wg
 	0x00, //scr Kg Kg
-	0xf5, //scr Wb Wr
+	0xf0, //scr Wb Wr
 	0x00, //scr Kb Kr
 	0x00, //curve 1 b
 	0x0f, //curve 1 a
@@ -1834,7 +1834,7 @@ char AUTO_VIDEO_1[] = {
 	0x01, //mdnie_en
 	0x00, //data_width mask 00 000
 	0x33, //scr_roi 1 scr algo_roi 1 algo 00 1 0 00 1 0
-	0x0d, //sharpen cc gamma 00 0 0
+	0x05, //sharpen cc gamma 00 0 0
 
 };
 
@@ -1860,9 +1860,9 @@ char AUTO_VIDEO_2[] = {
 	0x00, //scr Cr Yb
 	0xff, //scr Rr Bb
 	0xff, //scr Cg Yg
-	0x1c, //scr Rg Bg
+	0x0a, //scr Rg Bg
 	0xff, //scr Cb Yr
-	0x1c, //scr Rb Br
+	0x0a, //scr Rb Br
 	0xff, //scr Mr Mb
 	0x00, //scr Gr Gb
 	0x00, //scr Mg Mg
@@ -1957,7 +1957,7 @@ static char STANDARD_VT_1[] = {
 	0x01, //mdnie_en
 	0x00, //data_width mask 00 000
 	0x33, //scr_roi 1 scr algo_roi 1 algo 00 1 0 00 1 0
-	0x0c, //sharpen cc gamma 00 0 0
+	0x04, //sharpen cc gamma 00 0 0
 };
 
 static char STANDARD_VT_2[] = {
@@ -2077,7 +2077,7 @@ static char NATURAL_VT_1[] = {
 	0x01, //mdnie_en
 	0x00, //data_width mask 00 000
 	0x33, //scr_roi 1 scr algo_roi 1 algo 00 1 0 00 1 0
-	0x08, //sharpen cc gamma 00 0 0
+	0x04, //sharpen cc gamma 00 0 0
 };
 
 static char NATURAL_VT_2[] = {
@@ -2099,29 +2099,29 @@ static char NATURAL_VT_2[] = {
 	0x00,
 	0x00, //roi1 y end
 	0x00,
-	0x22, //scr Cr Yb
-	0xef, //scr Rr Bb
-	0xf2, //scr Cg Yg
-	0x12, //scr Rg Bg
-	0xe2, //scr Cb Yr
-	0x0d, //scr Rb Br
-	0xfd, //scr Mr Mb
-	0x1d, //scr Gr Gb
-	0x18, //scr Mg Mg
+	0x1d, //scr Cr Yb
+	0xf0, //scr Rr Bb
+	0xf1, //scr Cg Yg
+	0x13, //scr Rg Bg
+	0xde, //scr Cb Yr
+	0x0f, //scr Rb Br
+	0xfb, //scr Mr Mb
+	0x14, //scr Gr Gb
+	0x17, //scr Mg Mg
 	0xe7, //scr Gg Gg
-	0xf0, //scr Mb Mr
-	0x02, //scr Gb Gr
-	0xf3, //scr Yr Cb
-	0x1a, //scr Br Rb
-	0xf0, //scr Yg Cg
-	0x12, //scr Bg Rg
-	0x24, //scr Yb Cr
-	0xf9, //scr Bb Rr
+	0xe7, //scr Mb Mr
+	0x00, //scr Gb Gr
+	0xf0, //scr Yr Cb
+	0x1c, //scr Br Rb
+	0xf2, //scr Yg Cg
+	0x0c, //scr Bg Rg
+	0x27, //scr Yb Cr
+	0xe8, //scr Bb Rr
 	0xff, //scr Wr Wb
 	0x00, //scr Kr Kb
-	0xfa, //scr Wg Wg
+	0xf9, //scr Wg Wg
 	0x00, //scr Kg Kg
-	0xf5, //scr Wb Wr
+	0xf0, //scr Wb Wr
 	0x00, //scr Kb Kr
 	0x00, //curve 1 b
 	0x0f, //curve 1 a
@@ -2560,7 +2560,7 @@ static char MOVIE_VT_1[] = {
 	0x01, //mdnie_en
 	0x00, //data_width mask 00 000
 	0x33, //scr_roi 1 scr algo_roi 1 algo 00 1 0 00 1 0
-	0x08, //sharpen cc gamma 00 0 0
+	0x04, //sharpen cc gamma 00 0 0
 };
 
 static char MOVIE_VT_2[] = {
@@ -2582,29 +2582,29 @@ static char MOVIE_VT_2[] = {
 	0x00,
 	0x00, //roi1 y end
 	0x00,
-	0x99, //scr Cr Yb
-	0xcf, //scr Rr Bb
-	0xf6, //scr Cg Yg
-	0x1d, //scr Rg Bg
-	0xeb, //scr Cb Yr
-	0x15, //scr Rb Br
+	0x97, //scr Cr Yb
+	0xd2, //scr Rr Bb
+	0xf4, //scr Cg Yg
+	0x19, //scr Rg Bg
+	0xe7, //scr Cb Yr
+	0x16, //scr Rb Br
 	0xdb, //scr Mr Mb
-	0x78, //scr Gr Gb
-	0x2a, //scr Mg Mg
-	0xef, //scr Gg Gg
-	0xf3, //scr Mb Mr
-	0x24, //scr Gb Gr
+	0x70, //scr Gr Gb
+	0x24, //scr Mg Mg
+	0xf0, //scr Gg Gg
+	0xe5, //scr Mb Mr
+	0x22, //scr Gb Gr
 	0xf0, //scr Yr Cb
-	0x1f, //scr Br Rb
+	0x22, //scr Br Rb
 	0xf2, //scr Yg Cg
-	0x17, //scr Bg Rg
-	0x3b, //scr Yb Cr
-	0xf2, //scr Bb Rr
+	0x11, //scr Bg Rg
+	0x40, //scr Yb Cr
+	0xe1, //scr Bb Rr
 	0xff, //scr Wr Wb
 	0x00, //scr Kr Kb
-	0xfa, //scr Wg Wg
+	0xf9, //scr Wg Wg
 	0x00, //scr Kg Kg
-	0xf5, //scr Wb Wr
+	0xf0, //scr Wb Wr
 	0x00, //scr Kb Kr
 	0x00, //curve 1 b
 	0x0f, //curve 1 a
@@ -2680,7 +2680,7 @@ char AUTO_VT_1[] = {
 	0x01, //mdnie_en
 	0x00, //data_width mask 00 000
 	0x33, //scr_roi 1 scr algo_roi 1 algo 00 1 0 00 1 0
-	0x0d, //sharpen cc gamma 00 0 0
+	0x05, //sharpen cc gamma 00 0 0
 };
 
 char AUTO_VT_2[] = {
@@ -2705,9 +2705,9 @@ char AUTO_VT_2[] = {
 	0x00, //scr Cr Yb
 	0xff, //scr Rr Bb
 	0xff, //scr Cg Yg
-	0x00, //scr Rg Bg
+	0x0a, //scr Rg Bg
 	0xff, //scr Cb Yr
-	0x00, //scr Rb Br
+	0x0a, //scr Rb Br
 	0xff, //scr Mr Mb
 	0x00, //scr Gr Gb
 	0x00, //scr Mg Mg
@@ -2802,130 +2802,10 @@ static char CAMERA_1[] = {
 	0x01, //mdnie_en
 	0x00, //data_width mask 00 000
 	0x33, //scr_roi 1 scr algo_roi 1 algo 00 1 0 00 1 0
-	0x01, //sharpen cc gamma 00 0 0
-};
-
-static char CAMERA_2[] = {
-	0xEC,
-	0x00, //roi ctrl
-	0x00, //roi0 x start
-	0x00,
-	0x00, //roi0 x end
-	0x00,
-	0x00, //roi0 y start
-	0x00,
-	0x00, //roi0 y end
-	0x00,
-	0x00, //roi1 x strat
-	0x00,
-	0x00, //roi1 x end
-	0x00,
-	0x00, //roi1 y start
-	0x00,
-	0x00, //roi1 y end
-	0x00,
-	0x00, //scr Cr Yb
-	0xff, //scr Rr Bb
-	0xff, //scr Cg Yg
-	0x1c, //scr Rg Bg
-	0xff, //scr Cb Yr
-	0x1c, //scr Rb Br
-	0xff, //scr Mr Mb
-	0x00, //scr Gr Gb
-	0x00, //scr Mg Mg
-	0xff, //scr Gg Gg
-	0xff, //scr Mb Mr
-	0x00, //scr Gb Gr
-	0xff, //scr Yr Cb
-	0x00, //scr Br Rb
-	0xff, //scr Yg Cg
-	0x00, //scr Bg Rg
-	0x00, //scr Yb Cr
-	0xff, //scr Bb Rr
-	0xff, //scr Wr Wb
-	0x00, //scr Kr Kb
-	0xff, //scr Wg Wg
-	0x00, //scr Kg Kg
-	0xff, //scr Wb Wr
-	0x00, //scr Kb Kr
-	0x00, //curve 1 b
-	0x20, //curve 1 a
-	0x00, //curve 2 b
-	0x20, //curve 2 a
-	0x00, //curve 3 b
-	0x20, //curve 3 a
-	0x00, //curve 4 b
-	0x20, //curve 4 a
-	0x02, //curve 5 b
-	0x1b, //curve 5 a
-	0x02, //curve 6 b
-	0x1b, //curve 6 a
-	0x02, //curve 7 b
-	0x1b, //curve 7 a
-	0x01, //curve 8 b
-	0x1b, //curve 8 a
-	0x09, //curve 9 b
-	0xa6, //curve 9 a
-	0x09, //curve10 b
-	0xa6, //curve10 a
-	0x09, //curve11 b
-	0xa6, //curve11 a
-	0x09, //curve12 b
-	0xa6, //curve12 a
-	0x00, //curve13 b
-	0x20, //curve13 a
-	0x00, //curve14 b
-	0x20, //curve14 a
-	0x00, //curve15 b
-	0x20, //curve15 a
-	0x00, //curve16 b
-	0x20, //curve16 a
-	0x00, //curve17 b
-	0x20, //curve17 a
-	0x00, //curve18 b
-	0x20, //curve18 a
-	0x00, //curve19 b
-	0x20, //curve19 a
-	0x00, //curve20 b
-	0x20, //curve20 a
-	0x00, //curve21 b
-	0x20, //curve21 a
-	0x00, //curve22 b
-	0x20, //curve22 a
-	0x00, //curve23 b
-	0x20, //curve23 a
-	0x00, //curve24 b
-	0xFF, //curve24 a
-	0x04, //cc r1
-	0x2b,
-	0x1f, //cc r2
-	0xdc,
-	0x1f, //cc r3
-	0xf9,
-	0x1f, //cc g1
-	0xee,
-	0x04, //cc g2
-	0x19,
-	0x1f, //cc g3
-	0xf9,
-	0x1f, //cc b1
-	0xee,
-	0x1f, //cc b2
-	0xdc,
-	0x04, //cc b3
-	0x36,
-	//end
-};
-
-char AUTO_CAMERA_1[] = {
-	0xEB,
-	0x01, //mdnie_en
-	0x00, //data_width mask 00 000
-	0x33, //scr_roi 1 scr algo_roi 1 algo 00 1 0 00 1 0
 	0x00, //sharpen cc gamma 00 0 0
 };
 
-char AUTO_CAMERA_2[] = {
+static char CAMERA_2[] = {
 	0xEC,
 	0x00, //roi ctrl
 	0x00, //roi0 x start
@@ -2992,6 +2872,126 @@ char AUTO_CAMERA_2[] = {
 	0x20, //curve11 a
 	0x00, //curve12 b
 	0x20, //curve12 a
+	0x00, //curve13 b
+	0x20, //curve13 a
+	0x00, //curve14 b
+	0x20, //curve14 a
+	0x00, //curve15 b
+	0x20, //curve15 a
+	0x00, //curve16 b
+	0x20, //curve16 a
+	0x00, //curve17 b
+	0x20, //curve17 a
+	0x00, //curve18 b
+	0x20, //curve18 a
+	0x00, //curve19 b
+	0x20, //curve19 a
+	0x00, //curve20 b
+	0x20, //curve20 a
+	0x00, //curve21 b
+	0x20, //curve21 a
+	0x00, //curve22 b
+	0x20, //curve22 a
+	0x00, //curve23 b
+	0x20, //curve23 a
+	0x00, //curve24 b
+	0xFF, //curve24 a
+	0x04, //cc r1
+	0x2b,
+	0x1f, //cc r2
+	0xdc,
+	0x1f, //cc r3
+	0xf9,
+	0x1f, //cc g1
+	0xee,
+	0x04, //cc g2
+	0x19,
+	0x1f, //cc g3
+	0xf9,
+	0x1f, //cc b1
+	0xee,
+	0x1f, //cc b2
+	0xdc,
+	0x04, //cc b3
+	0x36,
+	//end
+};
+
+char AUTO_CAMERA_1[] = {
+	0xEB,
+	0x01, //mdnie_en
+	0x00, //data_width mask 00 000
+	0x33, //scr_roi 1 scr algo_roi 1 algo 00 1 0 00 1 0
+	0x01, //sharpen cc gamma 00 0 0
+};
+
+char AUTO_CAMERA_2[] = {
+	0xEC,
+	0x00, //roi ctrl
+	0x00, //roi0 x start
+	0x00,
+	0x00, //roi0 x end
+	0x00,
+	0x00, //roi0 y start
+	0x00,
+	0x00, //roi0 y end
+	0x00,
+	0x00, //roi1 x strat
+	0x00,
+	0x00, //roi1 x end
+	0x00,
+	0x00, //roi1 y start
+	0x00,
+	0x00, //roi1 y end
+	0x00,
+	0x00, //scr Cr Yb
+	0xff, //scr Rr Bb
+	0xff, //scr Cg Yg
+	0x0a, //scr Rg Bg
+	0xff, //scr Cb Yr
+	0x0a, //scr Rb Br
+	0xff, //scr Mr Mb
+	0x00, //scr Gr Gb
+	0x00, //scr Mg Mg
+	0xff, //scr Gg Gg
+	0xff, //scr Mb Mr
+	0x00, //scr Gb Gr
+	0xff, //scr Yr Cb
+	0x00, //scr Br Rb
+	0xff, //scr Yg Cg
+	0x00, //scr Bg Rg
+	0x00, //scr Yb Cr
+	0xff, //scr Bb Rr
+	0xff, //scr Wr Wb
+	0x00, //scr Kr Kb
+	0xff, //scr Wg Wg
+	0x00, //scr Kg Kg
+	0xff, //scr Wb Wr
+	0x00, //scr Kb Kr
+	0x00, //curve 1 b
+	0x20, //curve 1 a
+	0x00, //curve 2 b
+	0x20, //curve 2 a
+	0x00, //curve 3 b
+	0x20, //curve 3 a
+	0x00, //curve 4 b
+	0x20, //curve 4 a
+	0x02, //curve 5 b
+	0x1b, //curve 5 a
+	0x02, //curve 6 b
+	0x1b, //curve 6 a
+	0x02, //curve 7 b
+	0x1b, //curve 7 a
+	0x01, //curve 8 b
+	0x1b, //curve 8 a
+	0x09, //curve 9 b
+	0xa6, //curve 9 a
+	0x09, //curve10 b
+	0xa6, //curve10 a
+	0x09, //curve11 b
+	0xa6, //curve11 a
+	0x09, //curve12 b
+	0xa6, //curve12 a
 	0x00, //curve13 b
 	0x20, //curve13 a
 	0x00, //curve14 b
@@ -3587,9 +3587,9 @@ char STANDARD_BROWSER_2[] = {
 	0x00, //scr Cr Yb
 	0xff, //scr Rr Bb
 	0xff, //scr Cg Yg
-	0x00, //scr Rg Bg
+	0x1c, //scr Rg Bg
 	0xff, //scr Cb Yr
-	0x00, //scr Rb Br
+	0x1c, //scr Rb Br
 	0xff, //scr Mr Mb
 	0x00, //scr Gr Gb
 	0x00, //scr Mg Mg
@@ -3824,29 +3824,29 @@ char NATURAL_BROWSER_2[] = {
 	0x00,
 	0x00, //roi1 y end
 	0x00,
-	0x22, //scr Cr Yb
-	0xef, //scr Rr Bb
-	0xf2, //scr Cg Yg
-	0x12, //scr Rg Bg
-	0xe2, //scr Cb Yr
-	0x0d, //scr Rb Br
-	0xfd, //scr Mr Mb
-	0x1d, //scr Gr Gb
-	0x18, //scr Mg Mg
+	0x1d, //scr Cr Yb
+	0xf0, //scr Rr Bb
+	0xf1, //scr Cg Yg
+	0x13, //scr Rg Bg
+	0xde, //scr Cb Yr
+	0x0f, //scr Rb Br
+	0xfb, //scr Mr Mb
+	0x14, //scr Gr Gb
+	0x17, //scr Mg Mg
 	0xe7, //scr Gg Gg
-	0xf0, //scr Mb Mr
-	0x02, //scr Gb Gr
-	0xf3, //scr Yr Cb
-	0x1a, //scr Br Rb
-	0xf0, //scr Yg Cg
-	0x12, //scr Bg Rg
-	0x24, //scr Yb Cr
-	0xf9, //scr Bb Rr
+	0xe7, //scr Mb Mr
+	0x00, //scr Gb Gr
+	0xf0, //scr Yr Cb
+	0x1c, //scr Br Rb
+	0xf2, //scr Yg Cg
+	0x0c, //scr Bg Rg
+	0x27, //scr Yb Cr
+	0xe8, //scr Bb Rr
 	0xff, //scr Wr Wb
 	0x00, //scr Kr Kb
-	0xfa, //scr Wg Wg
+	0xf9, //scr Wg Wg
 	0x00, //scr Kg Kg
-	0xf5, //scr Wb Wr
+	0xf0, //scr Wb Wr
 	0x00, //scr Kb Kr
 	0x00, //curve 1 b
 	0x0f, //curve 1 a
@@ -3944,29 +3944,29 @@ char NATURAL_GALLERY_2[] = {
 	0x00,
 	0x00, //roi1 y end
 	0x00,
-	0x22, //scr Cr Yb
-	0xef, //scr Rr Bb
-	0xf2, //scr Cg Yg
-	0x12, //scr Rg Bg
-	0xe2, //scr Cb Yr
-	0x0d, //scr Rb Br
-	0xfd, //scr Mr Mb
-	0x1d, //scr Gr Gb
-	0x18, //scr Mg Mg
+	0x1d, //scr Cr Yb
+	0xf0, //scr Rr Bb
+	0xf1, //scr Cg Yg
+	0x13, //scr Rg Bg
+	0xde, //scr Cb Yr
+	0x0f, //scr Rb Br
+	0xfb, //scr Mr Mb
+	0x14, //scr Gr Gb
+	0x17, //scr Mg Mg
 	0xe7, //scr Gg Gg
-	0xf0, //scr Mb Mr
-	0x02, //scr Gb Gr
-	0xf3, //scr Yr Cb
-	0x1a, //scr Br Rb
-	0xf0, //scr Yg Cg
-	0x12, //scr Bg Rg
-	0x24, //scr Yb Cr
-	0xf9, //scr Bb Rr
+	0xe7, //scr Mb Mr
+	0x00, //scr Gb Gr
+	0xf0, //scr Yr Cb
+	0x1c, //scr Br Rb
+	0xf2, //scr Yg Cg
+	0x0c, //scr Bg Rg
+	0x27, //scr Yb Cr
+	0xe8, //scr Bb Rr
 	0xff, //scr Wr Wb
 	0x00, //scr Kr Kb
-	0xfa, //scr Wg Wg
+	0xf9, //scr Wg Wg
 	0x00, //scr Kg Kg
-	0xf5, //scr Wb Wr
+	0xf0, //scr Wb Wr
 	0x00, //scr Kb Kr
 	0x00, //curve 1 b
 	0x0f, //curve 1 a
@@ -4064,29 +4064,29 @@ char NATURAL_eBOOK_2[] = {
 	0x00,
 	0x00, //roi1 y end
 	0x00,
-	0x22, //scr Cr Yb
-	0xef, //scr Rr Bb
-	0xf2, //scr Cg Yg
-	0x12, //scr Rg Bg
-	0xe2, //scr Cb Yr
-	0x0d, //scr Rb Br
-	0xfd, //scr Mr Mb
-	0x1d, //scr Gr Gb
-	0x18, //scr Mg Mg
+	0x1d, //scr Cr Yb
+	0xf0, //scr Rr Bb
+	0xf1, //scr Cg Yg
+	0x13, //scr Rg Bg
+	0xde, //scr Cb Yr
+	0x0f, //scr Rb Br
+	0xfb, //scr Mr Mb
+	0x14, //scr Gr Gb
+	0x17, //scr Mg Mg
 	0xe7, //scr Gg Gg
-	0xf0, //scr Mb Mr
-	0x02, //scr Gb Gr
-	0xf3, //scr Yr Cb
-	0x1a, //scr Br Rb
-	0xf0, //scr Yg Cg
-	0x12, //scr Bg Rg
-	0x24, //scr Yb Cr
-	0xf9, //scr Bb Rr
+	0xe7, //scr Mb Mr
+	0x00, //scr Gb Gr
+	0xf0, //scr Yr Cb
+	0x1c, //scr Br Rb
+	0xf2, //scr Yg Cg
+	0x0c, //scr Bg Rg
+	0x27, //scr Yb Cr
+	0xe8, //scr Bb Rr
 	0xff, //scr Wr Wb
 	0x00, //scr Kr Kb
-	0xfa, //scr Wg Wg
+	0xf9, //scr Wg Wg
 	0x00, //scr Kg Kg
-	0xf5, //scr Wb Wr
+	0xf0, //scr Wb Wr
 	0x00, //scr Kb Kr
 	0x00, //curve 1 b
 	0x0f, //curve 1 a
@@ -4304,29 +4304,29 @@ char MOVIE_eBOOK_2[] = {
 	0x00,
 	0x00, //roi1 y end
 	0x00,
-	0x99, //scr Cr Yb
-	0xcf, //scr Rr Bb
-	0xf6, //scr Cg Yg
-	0x1d, //scr Rg Bg
-	0xeb, //scr Cb Yr
-	0x15, //scr Rb Br
+	0x97, //scr Cr Yb
+	0xd2, //scr Rr Bb
+	0xf4, //scr Cg Yg
+	0x19, //scr Rg Bg
+	0xe7, //scr Cb Yr
+	0x16, //scr Rb Br
 	0xdb, //scr Mr Mb
-	0x78, //scr Gr Gb
-	0x2a, //scr Mg Mg
-	0xef, //scr Gg Gg
-	0xf3, //scr Mb Mr
-	0x24, //scr Gb Gr
+	0x70, //scr Gr Gb
+	0x24, //scr Mg Mg
+	0xf0, //scr Gg Gg
+	0xe5, //scr Mb Mr
+	0x22, //scr Gb Gr
 	0xf0, //scr Yr Cb
-	0x1f, //scr Br Rb
+	0x22, //scr Br Rb
 	0xf2, //scr Yg Cg
-	0x17, //scr Bg Rg
-	0x3b, //scr Yb Cr
-	0xf2, //scr Bb Rr
+	0x11, //scr Bg Rg
+	0x40, //scr Yb Cr
+	0xe1, //scr Bb Rr
 	0xff, //scr Wr Wb
 	0x00, //scr Kr Kb
-	0xfa, //scr Wg Wg
+	0xf9, //scr Wg Wg
 	0x00, //scr Kg Kg
-	0xf5, //scr Wb Wr
+	0xf0, //scr Wb Wr
 	0x00, //scr Kb Kr
 	0x00, //curve 1 b
 	0x0f, //curve 1 a
@@ -4425,29 +4425,29 @@ char MOVIE_BROWSER_2[] = {
 	0x00,
 	0x00, //roi1 y end
 	0x00,
-	0x99, //scr Cr Yb
-	0xcf, //scr Rr Bb
-	0xf6, //scr Cg Yg
-	0x1d, //scr Rg Bg
-	0xeb, //scr Cb Yr
-	0x15, //scr Rb Br
+	0x97, //scr Cr Yb
+	0xd2, //scr Rr Bb
+	0xf4, //scr Cg Yg
+	0x19, //scr Rg Bg
+	0xe7, //scr Cb Yr
+	0x16, //scr Rb Br
 	0xdb, //scr Mr Mb
-	0x78, //scr Gr Gb
-	0x2a, //scr Mg Mg
-	0xef, //scr Gg Gg
-	0xf3, //scr Mb Mr
-	0x24, //scr Gb Gr
+	0x70, //scr Gr Gb
+	0x24, //scr Mg Mg
+	0xf0, //scr Gg Gg
+	0xe5, //scr Mb Mr
+	0x22, //scr Gb Gr
 	0xf0, //scr Yr Cb
-	0x1f, //scr Br Rb
+	0x22, //scr Br Rb
 	0xf2, //scr Yg Cg
-	0x17, //scr Bg Rg
-	0x3b, //scr Yb Cr
-	0xf2, //scr Bb Rr
+	0x11, //scr Bg Rg
+	0x40, //scr Yb Cr
+	0xe1, //scr Bb Rr
 	0xff, //scr Wr Wb
 	0x00, //scr Kr Kb
-	0xfa, //scr Wg Wg
+	0xf9, //scr Wg Wg
 	0x00, //scr Kg Kg
-	0xf5, //scr Wb Wr
+	0xf0, //scr Wb Wr
 	0x00, //scr Kb Kr
 	0x00, //curve 1 b
 	0x0f, //curve 1 a
@@ -4545,29 +4545,29 @@ char MOVIE_GALLERY_2[] = {
 	0x00,
 	0x00, //roi1 y end
 	0x00,
-	0x99, //scr Cr Yb
-	0xcf, //scr Rr Bb
-	0xf6, //scr Cg Yg
-	0x1d, //scr Rg Bg
-	0xeb, //scr Cb Yr
-	0x15, //scr Rb Br
+	0x97, //scr Cr Yb
+	0xd2, //scr Rr Bb
+	0xf4, //scr Cg Yg
+	0x19, //scr Rg Bg
+	0xe7, //scr Cb Yr
+	0x16, //scr Rb Br
 	0xdb, //scr Mr Mb
-	0x78, //scr Gr Gb
-	0x2a, //scr Mg Mg
-	0xef, //scr Gg Gg
-	0xf3, //scr Mb Mr
-	0x24, //scr Gb Gr
+	0x70, //scr Gr Gb
+	0x24, //scr Mg Mg
+	0xf0, //scr Gg Gg
+	0xe5, //scr Mb Mr
+	0x22, //scr Gb Gr
 	0xf0, //scr Yr Cb
-	0x1f, //scr Br Rb
+	0x22, //scr Br Rb
 	0xf2, //scr Yg Cg
-	0x17, //scr Bg Rg
-	0x3b, //scr Yb Cr
-	0xf2, //scr Bb Rr
+	0x11, //scr Bg Rg
+	0x40, //scr Yb Cr
+	0xe1, //scr Bb Rr
 	0xff, //scr Wr Wb
 	0x00, //scr Kr Kb
-	0xfa, //scr Wg Wg
+	0xf9, //scr Wg Wg
 	0x00, //scr Kg Kg
-	0xf5, //scr Wb Wr
+	0xf0, //scr Wb Wr
 	0x00, //scr Kb Kr
 	0x00, //curve 1 b
 	0x0f, //curve 1 a
@@ -4669,9 +4669,9 @@ char AUTO_BROWSER_2[] = {
 	0x00, //scr Cr Yb
 	0xff, //scr Rr Bb
 	0xff, //scr Cg Yg
-	0x1c, //scr Rg Bg
+	0x0a, //scr Rg Bg
 	0xff, //scr Cb Yr
-	0x1c, //scr Rb Br
+	0x0a, //scr Rb Br
 	0xff, //scr Mr Mb
 	0x00, //scr Gr Gb
 	0x00, //scr Mg Mg
@@ -4791,9 +4791,9 @@ char AUTO_EBOOK_2[] = {
 	0x00, //scr Cr Yb
 	0xff, //scr Rr Bb
 	0xff, //scr Cg Yg
-	0x00, //scr Rg Bg
+	0x0a, //scr Rg Bg
 	0xff, //scr Cb Yr
-	0x00, //scr Rb Br
+	0x0a, //scr Rb Br
 	0xff, //scr Mr Mb
 	0x00, //scr Gr Gb
 	0x00, //scr Mg Mg

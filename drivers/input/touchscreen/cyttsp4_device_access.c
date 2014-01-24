@@ -144,7 +144,7 @@ static ssize_t cyttsp4_ic_grpnum_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
 	struct cyttsp4_device_access_data *dad = dev_get_drvdata(dev);
-	int val = 0;
+	int val;
 
 	mutex_lock(&dad->sysfs_lock);
 	val = dad->ic_grpnum;
@@ -218,7 +218,7 @@ static ssize_t cyttsp4_ic_grpoffset_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
 	struct cyttsp4_device_access_data *dad = dev_get_drvdata(dev);
-	int val = 0;
+	int val;
 
 	mutex_lock(&dad->sysfs_lock);
 	val = dad->ic_grpoffset;
@@ -1460,7 +1460,7 @@ static ssize_t cyttsp4_get_panel_data_show(struct device *dev,
 	struct cyttsp4_device_access_data *dad = dev_get_drvdata(dev);
 	u8 return_buf[CY_CMD_CAT_RET_PANEL_DATA_RET_SZ];
 
-	int rc = 0;
+	int rc;
 	int rc1 = 0;
 	int dataIdx = -1;
 	int i = 0;
@@ -1678,7 +1678,7 @@ static int cyttsp4_setup_sysfs(struct cyttsp4_device *ttsp)
 {
 	struct device *dev = &ttsp->dev;
 	struct cyttsp4_device_access_data *dad = dev_get_drvdata(dev);
-	int rc = 0;
+	int rc;
 
 	rc = device_create_file(dev, &dev_attr_ic_grpnum);
 	if (rc) {

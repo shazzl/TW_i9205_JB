@@ -19,10 +19,9 @@
 static struct msm_panel_info pinfo;
 static struct mipi_panel_data mipi_pd;
 
-/*
-#define MIPI_CLK 450000000
-#define MIPI_CLK 420000000
-*/
+#if 0
+#define MIPI_CLK (450000000)
+#endif
 #define MIPI_CLK (365000000) /* 130412 HW request */
 #define USE_AOR (1)
 #define HBM_OVERWRITING	(1)
@@ -186,22 +185,7 @@ static char samsung_panel_condition[] = {
 	0x00, 0x05, 0x80, 0x80, 0x0C,
 	0x01,
 };
-#elif (MIPI_CLK==420000000)
-static char samsung_panel_condition[] = {
-	0xCB,
-	0x06, 0x00, 0x00, 0x01, 0x01,
-	0x01, 0x01, 0x02, 0x00, 0x00,
-	0x30, 0x67, 0x89, 0x00, 0x53,
-	0xB9, 0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x5A, 0xA5,
-	0x00, 0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x01, 0x00, 0x0D,
-	0x69, 0x0D, 0x69, 0x05, 0x05,
-	0x1E, 0x1E, 0x1E, 0x00, 0x00,
-	0x00, 0x05, 0x80, 0x80, 0x0C,
-	0x01,
-};
-#elif (MIPI_CLK==365000000)
+#elif (MIPI_CLK==365000000)	/* 130509 updated */
 static char samsung_panel_condition[] = {
 	0xCB,
 	0x06, 0x00, 0x00, 0x01, 0x01,
@@ -658,10 +642,10 @@ static int elvss_array[ELVSS_MAX][2] = {
 	{172, 0x11},
 	{183, 0x13},
 	{195, 0x12},
-	{207, 0x11},
-	{220, 0x10},
-	{234, 0x0F},
-	{249, 0x0E},
+	{207, 0x12},
+	{220, 0x11},
+	{234, 0x10},
+	{249, 0x0F},
 	{265, 0x0D},
 	{282, 0x0C},
 	{300, 0x0B}
@@ -698,43 +682,43 @@ static void aor_copy_AMS367AV( int candela, char* dest )
 
 	switch( candela )
 	{
-	case 0 ... 10 :	aor_value[0] = 0x02; aor_value[1] = 0xF0;	break; /* 92.2 */
-	case 11 :	aor_value[0] = 0x02; aor_value[1] = 0xE6;	break; /* 90.9 */
-	case 12 :	aor_value[0] = 0x02; aor_value[1] = 0xE3;	break; /* 90.6 */
-	case 13 :	aor_value[0] = 0x02; aor_value[1] = 0xD7;	break; /* 89.1 */
-	case 14 :	aor_value[0] = 0x02; aor_value[1] = 0xD5;	break; /* 88.8 */
-	case 15 :	aor_value[0] = 0x02; aor_value[1] = 0xCA;	break; /* 87.5 */
-	case 16 :	aor_value[0] = 0x02; aor_value[1] = 0xC5;	break; /* 86.9 */
-	case 17 ... 18 :	aor_value[0] = 0x02; aor_value[1] = 0xC3;	break; /* 86.6 */
-	case 19 :	aor_value[0] = 0x02; aor_value[1] = 0xB2;	break; /* 84.6 */
-	case 20 :	aor_value[0] = 0x02; aor_value[1] = 0xA7;	break; /* 83.2 */
-	case 21 :	aor_value[0] = 0x02; aor_value[1] = 0xA5;	break; /* 83.0 */
-	case 22 ... 23 :	aor_value[0] = 0x02; aor_value[1] = 0x9C;	break; /* 81.9 */
-	case 24 :	aor_value[0] = 0x02; aor_value[1] = 0x90;	break; /* 80.4 */
-	case 25 ... 26 :	aor_value[0] = 0x02; aor_value[1] = 0x87;	break; /* 79.3 */
-	case 27 ... 28 :	aor_value[0] = 0x02; aor_value[1] = 0x77;	break; /* 77.3 */
-	case 29 :	aor_value[0] = 0x02; aor_value[1] = 0x6A;	break; /* 75.7 */
-	case 30 ... 31 :	aor_value[0] = 0x02; aor_value[1] = 0x65;	break; /* 75.1 */
-	case 32 ... 33 :	aor_value[0] = 0x02; aor_value[1] = 0x56;	break; /* 73.3 */
-	case 34 ... 36 :	aor_value[0] = 0x02; aor_value[1] = 0x47;	break; /* 71.4 */
-	case 37 ... 38 :	aor_value[0] = 0x02; aor_value[1] = 0x33;	break; /* 69.0 */
-	case 39 ... 40 :	aor_value[0] = 0x02; aor_value[1] = 0x24;	break; /* 67.2 */
-	case 41 ... 43 :	aor_value[0] = 0x02; aor_value[1] = 0x15;	break; /* 65.3 */
-	case 44 ... 46 :	aor_value[0] = 0x02; aor_value[1] = 0x02;	break; /* 63.0 */
-	case 47 ... 49 :	aor_value[0] = 0x01; aor_value[1] = 0xE6;	break; /* 59.6 */
-	case 50 ... 52 :	aor_value[0] = 0x01; aor_value[1] = 0xD4;	break; /* 57.4 */
-	case 53 ... 55 :	aor_value[0] = 0x01; aor_value[1] = 0xB9;	break; /* 54.0 */
-	case 56 ... 59 :	aor_value[0] = 0x01; aor_value[1] = 0xA5;	break; /* 51.6 */
-	case 60 ... 63 :	aor_value[0] = 0x01; aor_value[1] = 0x86;	break; /* 47.8 */
-	case 64 ... 67 :	aor_value[0] = 0x01; aor_value[1] = 0x66;	break; /* 43.9 */
-	case 68 ... 71 :	aor_value[0] = 0x01; aor_value[1] = 0x48;	break; /* 40.2 */
-	case 72 ... 76 :	aor_value[0] = 0x01; aor_value[1] = 0x29;	break; /* 36.4 */
-	case 77 ... 81 :	aor_value[0] = 0x01; aor_value[1] = 0x05;	break; /* 32.0 */
-	case 82 ... 86 :	aor_value[0] = 0x00; aor_value[1] = 0xE0;	break; /* 27.5 */
-	case 87 ... 92 :	aor_value[0] = 0x00; aor_value[1] = 0xB7;	break; /* 22.4 */
-	case 93 ... 97 :	aor_value[0] = 0x00; aor_value[1] = 0x84;	break; /* 16.2 */
-	case 98 ... 104 :	aor_value[0] = 0x00; aor_value[1] = 0x58;	break; /* 10.8 */
-	case 105 ... 109 :	aor_value[0] = 0x00; aor_value[1] = 0x25;	break; /* 4.5 */
+	case 0 ... 10 :	aor_value[0] = 0x02; aor_value[1] = 0xEA;	break; /* 91.4 */
+	case 11 :	aor_value[0] = 0x02; aor_value[1] = 0xE3;	break; /* 90.6 */
+	case 12 :	aor_value[0] = 0x02; aor_value[1] = 0xDC;	break; /* 89.7 */
+	case 13 :	aor_value[0] = 0x02; aor_value[1] = 0xD5;	break; /* 88.8 */
+	case 14 :	aor_value[0] = 0x02; aor_value[1] = 0xCE;	break; /* 88.0 */
+	case 15 :	aor_value[0] = 0x02; aor_value[1] = 0xC7;	break; /* 87.1 */
+	case 16 :	aor_value[0] = 0x02; aor_value[1] = 0xB9;	break; /* 85.4 */
+	case 17 ... 18 :	aor_value[0] = 0x02; aor_value[1] = 0xB2;	break; /* 84.6 */
+	case 19 :	aor_value[0] = 0x02; aor_value[1] = 0xAB;	break; /* 83.7 */
+	case 20 :	aor_value[0] = 0x02; aor_value[1] = 0xA4;	break; /* 82.8 */
+	case 21 :	aor_value[0] = 0x02; aor_value[1] = 0x96;	break; /* 81.1 */
+	case 22 ... 23 :	aor_value[0] = 0x02; aor_value[1] = 0x8F;	break; /* 80.3 */
+	case 24 :	aor_value[0] = 0x02; aor_value[1] = 0x81;	break; /* 78.6 */
+	case 25 ... 26 :	aor_value[0] = 0x02; aor_value[1] = 0x7A;	break; /* 77.7 */
+	case 27 ... 28 :	aor_value[0] = 0x02; aor_value[1] = 0x6C;	break; /* 76.0 */
+	case 29 :	aor_value[0] = 0x02; aor_value[1] = 0x65;	break; /* 75.1 */
+	case 30 ... 31 :	aor_value[0] = 0x02; aor_value[1] = 0x57;	break; /* 73.4 */
+	case 32 ... 33 :	aor_value[0] = 0x02; aor_value[1] = 0x49;	break; /* 71.7 */
+	case 34 ... 36 :	aor_value[0] = 0x02; aor_value[1] = 0x3B;	break; /* 70.0 */
+	case 37 ... 38 :	aor_value[0] = 0x02; aor_value[1] = 0x26;	break; /* 67.4 */
+	case 39 ... 40 :	aor_value[0] = 0x02; aor_value[1] = 0x18;	break; /* 65.7 */
+	case 41 ... 43 :	aor_value[0] = 0x02; aor_value[1] = 0x03;	break; /* 63.1 */
+	case 44 ... 46 :	aor_value[0] = 0x01; aor_value[1] = 0xEE;	break; /* 60.5 */
+	case 47 ... 49 :	aor_value[0] = 0x01; aor_value[1] = 0xD9;	break; /* 58.0 */
+	case 50 ... 52 :	aor_value[0] = 0x01; aor_value[1] = 0xC4;	break; /* 55.4 */
+	case 53 ... 55 :	aor_value[0] = 0x01; aor_value[1] = 0xA8;	break; /* 52.0 */
+	case 56 ... 59 :	aor_value[0] = 0x01; aor_value[1] = 0x93;	break; /* 49.4 */
+	case 60 ... 63 :	aor_value[0] = 0x01; aor_value[1] = 0x77;	break; /* 46.0 */
+	case 64 ... 67 :	aor_value[0] = 0x01; aor_value[1] = 0x54;	break; /* 41.7 */
+	case 68 ... 71 :	aor_value[0] = 0x01; aor_value[1] = 0x38;	break; /* 38.2 */
+	case 72 ... 76 :	aor_value[0] = 0x01; aor_value[1] = 0x15;	break; /* 33.9 */
+	case 77 ... 81 :	aor_value[0] = 0x00; aor_value[1] = 0xF2;	break; /* 29.7 */
+	case 82 ... 86 :	aor_value[0] = 0x00; aor_value[1] = 0xC8;	break; /* 24.5 */
+	case 87 ... 92 :	aor_value[0] = 0x00; aor_value[1] = 0xA5;	break; /* 20.2 */
+	case 93 ... 97 :	aor_value[0] = 0x00; aor_value[1] = 0x74;	break; /* 14.2 */
+	case 98 ... 104 :	aor_value[0] = 0x00; aor_value[1] = 0x51;	break; /* 09.9 */
+	case 105 ... 109 :	aor_value[0] = 0x00; aor_value[1] = 0x19;	break; /* 03.1 */
 	case 110 ... 180 :	aor_value[0] = 0x01; aor_value[1] = 0x46;	break; /* 40.0 */
 	case 183 ... 300 :	aor_value[0] = 0x00; aor_value[1] = 0x07;	break; /* 0.9 */
 	default :
@@ -1039,21 +1023,39 @@ static struct mipi_panel_data mipi_pd = {
 				, ARRAY_SIZE(panel_acl_cmds)},
 };
 
+#if (MIPI_CLK==450000000)
 static struct mipi_dsi_phy_ctrl dsi_video_mode_phy_db = {
 	/* DSI_BIT_CLK at 450MHz, 2 lane, RGB888 */
 	{0x03, 0x0a, 0x04, 0x00, 0x20}, /* regulator */
 	/* timing   */
 	{0x7f, 0x30, 0x13, 0x00, 0x41, 0x47, 0x17, 0x34,
-	 0x20, 0x03, 0x04, 0x00},
+	0x20, 0x03, 0x04, 0x00},
 	/* phy ctrl */
 	{0x5f, 0x00, 0x00, 0x10},
 	/* strength */
 	{0xff, 0x00, 0x06, 0x00},
 	/* pll control */
 	{0x0, 0xc1, 0x1, 0xda, 0x00, 0x50, 0x48, 0x63,
-	 0x41, 0x0f, 0x01,
-	 0x00, 0x14, 0x03, 0x00, 0x02, 0x00, 0x20, 0x00, 0x01},
+	0x41, 0x0f, 0x01,
+	0x00, 0x14, 0x03, 0x00, 0x02, 0x00, 0x20, 0x00, 0x01},
 };
+#elif (MIPI_CLK==365000000)	/* 130509 updated */
+static struct mipi_dsi_phy_ctrl dsi_video_mode_phy_db = {
+	/* DSI_BIT_CLK at 450MHz, 2 lane, RGB888 */
+	{0x03, 0x0a, 0x04, 0x00, 0x20},	/* regulator */
+	/* timing   */
+	{0x6c, 0x2c, 0x0f, 0x00, 0x39, 0x42, 0x13, 0x30,
+	0x19, 0x03, 0x04, 0x00},	/* 365Mhz */
+	/* phy ctrl */
+	{0x5f, 0x00, 0x00, 0x10},
+	/* strength */
+	{0xff, 0x00, 0x06, 0x00},
+	/* pll control */
+	{0x0, 0x6c, 0x01, 0xda, 0x00, 0x50, 0x48, 0x63,
+	0x41, 0x0f, 0x01,
+	0x00, 0x14, 0x03, 0x00, 0x02, 0x00, 0x20, 0x00, 0x01},
+};
+#endif
 
 #if defined(CONFIG_FB_MSM_MIPI_AMS367_OLED_VIDEO_WVGA_PT_PANEL)
 int is_S6E88A(void);
@@ -1089,9 +1091,15 @@ printk(KERN_DEBUG "[lcd] mipi_video_ams367av_oled_wvga_pt_init start\n");
 	pinfo.wait_cycle = 0;
 	pinfo.bpp = 24;
 
+#if (MIPI_CLK==450000000)
 	pinfo.lcdc.h_back_porch = 83;
 	pinfo.lcdc.h_front_porch = 200;
 	pinfo.lcdc.h_pulse_width = 2;
+#elif (MIPI_CLK==365000000)	/* 130509 updated */
+	pinfo.lcdc.h_back_porch = 50;
+	pinfo.lcdc.h_front_porch = 90;
+	pinfo.lcdc.h_pulse_width = 2;
+#endif
 
 	pinfo.lcdc.v_back_porch = 1;
 	pinfo.lcdc.v_front_porch = 13;

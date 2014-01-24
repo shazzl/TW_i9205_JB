@@ -48,6 +48,9 @@
 #define MPU6500_MODE_SLEEP	2
 #define MPU6500_MODE_WAKE_UP	3
 
+#define MAX_GYRO	32767
+#define MIN_GYRO	-32768
+
 #define LOG_RESULT_LOCATION(x) {\
 	printk(KERN_ERR "%s:%s:%d result=%d\n",__FILE__,__func__,__LINE__, x);\
 }\
@@ -73,6 +76,9 @@
 #define DMP_MASK_DIS_ORIEN       0xC0
 #define DMP_DIS_ORIEN_SHIFT      6
 
+#define MPU6500_GYRO_SPC_CFG	0x49
+#define MPU6500_REG_BANK_SEL	0x76
+#define MPU6500_CFG_SET_BIT	0x20
 
 #define MPU6500_CALIB_FILENAME	"//data//mpu6500.cal"
 
@@ -462,8 +468,7 @@ static void mpu6500_input_report_accel_xyz(struct mpu6500_input_data *data)
 static void mpu6500_input_report_gyro_xyz(struct mpu6500_input_data *data)
 {
 	u8 regs[6];
-	s16 raw[3], orien_raw[3];
-
+	s16 raw[3], orien_raw[3], raw_tmp[3];
 	int result;
 
 	const struct mpu6k_input_platform_data *pdata =
@@ -472,12 +477,36 @@ static void mpu6500_input_report_gyro_xyz(struct mpu6500_input_data *data)
 	result =
 	    mpu6500_i2c_read_reg(data->client, MPUREG_GYRO_XOUT_H, 6, regs);
 
-	raw[0] =
-	    (((s16) ((s16) regs[0] << 8)) | regs[1]) - (s16) data->gyro_bias[0];
-	raw[1] =
-	    (((s16) ((s16) regs[2] << 8)) | regs[3]) - (s16) data->gyro_bias[1];
-	raw[2] =
-	    (((s16) ((s16) regs[4] << 8)) | regs[5]) - (s16) data->gyro_bias[2];
+	if (result) {
+		pr_err("%s: i2c_read err= %d\n", __func__, result);
+		return;
+	}
+
+	raw_tmp[0] = (((s16) ((s16) regs[0] << 8)) | regs[1]);
+	raw_tmp[1] = (((s16) ((s16) regs[2] << 8)) | regs[3]);
+	raw_tmp[2] = (((s16) ((s16) regs[4] << 8)) | regs[5]);
+
+	raw[0] = raw_tmp[0] - (s16) data->gyro_bias[0];
+	raw[1] = raw_tmp[1] - (s16) data->gyro_bias[1];
+	raw[2] = raw_tmp[2] - (s16) data->gyro_bias[2];
+
+	if (!(raw[0] >> 15 == raw_tmp[0] >> 15) &&\
+		!((s16) data->gyro_bias[0] >> 15 == raw_tmp[0] >> 15)) {
+		pr_info("%s GYRO X is overflowed!!!\n", __func__);
+		raw[0] = (raw[0] >= 0 ? MIN_GYRO : MAX_GYRO);
+
+	}
+	if (!(raw[1] >> 15 == raw_tmp[1] >> 15) &&\
+		!((s16) data->gyro_bias[1] >> 15 == raw_tmp[1] >> 15)) {
+		pr_info("%s GYRO Y is overflowed!!!\n", __func__);
+		raw[1] = (raw[1] >= 0 ? MIN_GYRO : MAX_GYRO);
+
+	}
+	if (!(raw[2] >> 15 == raw_tmp[2] >> 15) &&\
+		!((s16) data->gyro_bias[2] >> 15 == raw_tmp[2] >> 15)) {
+		pr_info("%s GYRO Z is overflowed!!!\n", __func__);
+		raw[2] = (raw[2] >= 0 ? MIN_GYRO : MAX_GYRO);
+	}
 
 	mpu6500_apply_orientation(pdata->orientation, raw, orien_raw);
 
@@ -643,7 +672,7 @@ static irqreturn_t mpu6500_input_irq_thread(int irq, void *dev)
 
 		timediff = jiffies_to_msecs(jiffies - data->motion_recg_st_time);
 		/* ignore motion interrupt happened in 100ms to skip intial erronous interrupt */
-		if (timediff < 150 && !(data->factory_mode)) {
+		if (timediff < 1000 && !(data->factory_mode)) {
 			pr_debug("%s: timediff = %ld msec\n",
 				__func__, timediff);
 			goto done;
@@ -1164,6 +1193,24 @@ static int mpu6500_input_activate_devices(struct mpu6500_input_data *data,
 
 	return result;
 }
+static void mpu6500_set_65XX_gyro_config(struct i2c_client *i2c_client)
+{
+
+	unsigned char d, cfg;
+
+	mpu6500_i2c_read_reg(i2c_client, MPU6500_REG_BANK_SEL, 1, &cfg);
+
+	mpu6500_i2c_write_single_reg(i2c_client, MPU6500_REG_BANK_SEL,
+			cfg | MPU6500_CFG_SET_BIT);
+
+	mpu6500_i2c_read_reg(i2c_client, MPU6500_GYRO_SPC_CFG, 1, &d);
+
+	d |= 1;
+	mpu6500_i2c_write_single_reg(i2c_client, MPU6500_GYRO_SPC_CFG, d);
+
+	mpu6500_i2c_write_single_reg(i2c_client, MPU6500_REG_BANK_SEL, cfg);
+
+}
 
 static int __devinit mpu6500_input_initialize(struct mpu6500_input_data *data, const struct mpu6500_input_cfg
 					      *cfg)
@@ -1177,7 +1224,7 @@ static int __devinit mpu6500_input_initialize(struct mpu6500_input_data *data, c
 
 	CHECK_RESULT(mpu6500_i2c_write_single_reg
 		     (data->client, MPUREG_PWR_MGMT_1, BIT_H_RESET));
-	msleep(30);
+	msleep(100);
 
 	CHECK_RESULT(mpu6500_i2c_write_single_reg
 		     (data->client, MPUREG_INT_PIN_CFG,
@@ -1186,6 +1233,8 @@ static int __devinit mpu6500_input_initialize(struct mpu6500_input_data *data, c
 #ifdef CONFIG_INPUT_MPU6500_LP
 	CHECK_RESULT(mpu6500_lp_init_dmp(data->client, pdata->orientation));
 #endif //CONFIG_INPUT_MPU6500_LP
+
+	mpu6500_set_65XX_gyro_config(data->client);
 
 	return mpu6500_input_set_mode(data, MPU6500_MODE_SLEEP);
 }
@@ -1941,6 +1990,9 @@ static ssize_t mpu6500_input_gyro_selftest_show(struct device *dev,
 
 	hw_result = mpu6500_gyro_hw_self_check(data->client, ratio);
 
+	pr_info("%s, result = %d, hw_result = %d\n", __func__,
+			result, hw_result);
+
 	if (!result) {
 		/* store calibration to file */
 		gyro_do_calibrate();
@@ -2405,6 +2457,8 @@ static int mpu6500_input_suspend(struct device *dev)
 		if (atomic_read(&data->accel_enable) ||
 			atomic_read(&data->gyro_enable))
 			mpu6500_input_set_mode(data, MPU6500_MODE_SLEEP);
+	} else {
+		disable_irq(client->irq);
 	}
 	return 0;
 }
@@ -2428,6 +2482,8 @@ static int mpu6500_input_resume(struct device *dev)
 		if (atomic_read(&data->accel_enable) ||
 			atomic_read(&data->gyro_enable))
 			mpu6500_input_set_mode(data, MPU6500_MODE_NORMAL);
+	} else {
+		enable_irq(client->irq);
 	}
 #ifdef CONFIG_INPUT_MPU6500_POLLING
 		if (atomic_read(&data->accel_enable))

@@ -6,6 +6,8 @@
 #include "a2220_melius_chn_ctc.h"
 #elif defined CONFIG_MACH_MELIUS_TMO
 #include "a2220_melius_tmo.h"
+#elif defined CONFIG_MACH_MELIUS_ATT
+#include "a2220_melius_att.h"
 #elif defined (CONFIG_MACH_MELIUS_SKT) || defined(CONFIG_MACH_MELIUS_KTT) || \
       defined(CONFIG_MACH_MELIUS_LGT)
 #include "a2220_melius_kor.h"
@@ -20,7 +22,7 @@
 #elif defined CONFIG_MACH_SERRANO_SPR
 #include "a2220_serrano_spr.h"
 #elif defined CONFIG_MACH_SERRANO_USC
-#include "a2220_serrano_usc.h"
+#include "a2220_serrano_att.h"
 #elif defined CONFIG_MACH_SERRANO_VZW
 #include "a2220_serrano_vzw.h"
 #elif defined CONFIG_MACH_CRATER

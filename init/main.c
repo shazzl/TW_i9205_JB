@@ -110,7 +110,12 @@ EXPORT_SYMBOL(system_state);
 #ifdef CONFIG_SAMSUNG_LPM_MODE
 int poweroff_charging;
 #endif /*  CONFIG_SAMSUNG_LPM_MODE */
+
+#ifdef CONFIG_FB_MSM_LOGO
+bool use_frame_buffer = 1;
+#else
 bool use_frame_buffer = 0;
+#endif
 
 /*
  * Boot command-line arguments

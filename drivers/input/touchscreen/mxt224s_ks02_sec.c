@@ -27,6 +27,7 @@
 #include <linux/i2c/mxt224s_ks02.h>
 #include "mxt224s_ks02_dev.h"
 
+#define mxt224s_ref_offset 16384
 
 #if TSP_SEC_SYSFS
 static void set_default_result(struct mxt_data_sysfs *data)
@@ -205,7 +206,7 @@ static void fw_update(void *device_data)
 		if (IS_ERR(filp)) {
 			dev_err(&client->dev, "could not open firmware: %s,%d\n",
 				fw_path, (s32)filp);
-			set_fs(old_fs);	
+			set_fs(old_fs);
 			goto err_open;
 		}
 
@@ -265,7 +266,7 @@ static void fw_update(void *device_data)
 	disable_irq(data->client->irq);
 
 	ret = set_mxt_firm_update_store(data, fw_data, fw_size);
-	kfree(fw);	
+	kfree(fw);
 	enable_irq(data->client->irq);
 
 	if (ret)
@@ -478,7 +479,7 @@ static void get_x_num(void *device_data)
 	u8 val = 0;
 
 	set_default_result(sysfs_data);
-	val = MATRIX_X;
+	val = MATRIX_REAL_X;  /* 19 * 14, but really, 18 * 11 */
 	if (val < 0) {
 		snprintf(buff, sizeof(buff), "%s", "NG");
 		set_cmd_result(sysfs_data, buff, strnlen(buff, sizeof(buff)));
@@ -507,8 +508,8 @@ static void get_y_num(void *device_data)
 	u8 val;
 
 	set_default_result(sysfs_data);
-	/* val = MATRIX_Y;  */    /* 19 * 14, but really, 19 * 11 */
-	val = MATRIX_REAL_Y;
+	/* val = MATRIX_Y;  */
+	val = MATRIX_REAL_Y;  /* 19 * 14, but really, 18 * 11 */
 	if (val < 0) {
 		snprintf(buff, sizeof(buff), "%s", "NG");
 		set_cmd_result(sysfs_data, buff, strnlen(buff, sizeof(buff)));
@@ -542,7 +543,7 @@ static void run_reference_read(void *device_data)
 		sysfs_data->cmd_state = CMD_STATUS_FAIL;
 	else {
 		snprintf(buff, sizeof(buff), "%d,%d",
-			sysfs_data->ref_min_data, sysfs_data->ref_max_data);
+			sysfs_data->ref_min_data - mxt224s_ref_offset, sysfs_data->ref_max_data - mxt224s_ref_offset);
 		set_cmd_result(sysfs_data, buff, strnlen(buff, sizeof(buff)));
 
 		sysfs_data->cmd_state = CMD_STATUS_OK;
@@ -566,7 +567,7 @@ static void get_reference(void *device_data)
 		return;
 	} else {
 		snprintf(buff, sizeof(buff), "%u",
-			sysfs_data->reference[node]);
+			sysfs_data->reference[node] - mxt224s_ref_offset);
 		set_cmd_result(sysfs_data,
 			buff, strnlen(buff, sizeof(buff)));
 

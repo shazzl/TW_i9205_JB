@@ -96,6 +96,10 @@ static inline bool aca_enabled(void)
 #endif
 }
 
+#ifdef CONFIG_USB_SWITCH_TSU6721
+static int state;
+#endif
+
 static const int vdd_val[VDD_TYPE_MAX][VDD_VAL_MAX] = {
 		{  /* VDD_CX CORNER Voting */
 			[VDD_NONE]	= RPM_VREG_CORNER_NONE,
@@ -1336,6 +1340,7 @@ static void msm_hsusb_vbus_power(struct msm_otg *motg, bool on)
 	if (motg->pdata->vbus_power) {
 #ifdef CONFIG_USB_HOST_NOTIFY
 		if (!motg->smartdock) {
+			pr_info("msm_otg: ext vbus_power : %d\n", on);
 			ret = motg->pdata->vbus_power(on);
 			if (!ret)
 				vbus_is_on = on;
@@ -1484,7 +1489,14 @@ static void msm_otg_start_peripheral(struct usb_otg *otg, int on)
 				dev_err(motg->phy.dev, "%s: Failed to vote for "
 					   "bus bandwidth %d\n", __func__, ret);
 		}
-		usb_gadget_vbus_connect(otg->gadget);
+		if (!motg->disable_peripheral) {
+			pr_info("%s disable_peripheral: %x\n",
+				__func__, motg->disable_peripheral);
+			usb_gadget_vbus_connect(otg->gadget);
+		}else{
+			pr_info("USBLOCK: peripheral mode is blocked!!\n");
+		}
+
 	} else {
 		dev_dbg(otg->phy->dev, "gadget off\n");
 		usb_gadget_vbus_disconnect(otg->gadget);
@@ -2333,11 +2345,26 @@ static void msm_otg_init_sm(struct msm_otg *motg)
 	}
 }
 
+#ifdef CONFIG_USB_SWITCH_TSU6721
+int msm_otg_get_usb_state(int data)
+{
+	if (data == 1) {
+		pr_info("%s usb state is [%d]", __func__, state);
+		return state;
+	}
+	return 0;
+}
+#endif
+
 static void msm_otg_sm_work(struct work_struct *w)
 {
 	struct msm_otg *motg = container_of(w, struct msm_otg, sm_work);
 	struct usb_otg *otg = motg->phy.otg;
 	bool work = 0, srp_reqd;
+
+#ifdef CONFIG_USB_SWITCH_TSU6721
+	state = 0;
+#endif
 
 	pm_runtime_resume(otg->phy->dev);
 	pr_debug("%s work\n", otg_state_string(otg->phy->state));
@@ -2391,6 +2418,9 @@ static void msm_otg_sm_work(struct work_struct *w)
 				case USB_PROPRIETARY_CHARGER:
 					msm_otg_notify_charger(motg,
 							IDEV_CHG_MAX);
+#ifdef CONFIG_USB_SWITCH_TSU6721
+					state = 1;
+#endif
 					pm_runtime_put_noidle(otg->phy->dev);
 					pm_runtime_suspend(otg->phy->dev);
 					break;
@@ -3148,6 +3178,50 @@ static void msm_pmic_id_status_w(struct work_struct *w)
 
 }
 
+static void msm_otg_enable_peripheral(struct msm_otg *motg, bool enable)
+{
+	struct usb_otg *otg;
+
+	if (!motg) {
+		pr_err("Unable to get msm_otg\n");
+		return;
+	}
+
+	otg = motg->phy.otg;
+
+	if (enable) {
+		pr_info("USBLOCK: enable peripheral\n");
+		motg->disable_peripheral = false;
+	} else {
+		pr_info("USBLOCK: disable peripheral\n");
+		usb_gadget_vbus_disconnect(otg->gadget);
+		motg->disable_peripheral = true;
+	}
+}
+static ssize_t show_usb_device_lock_state(struct device *pdev,
+		struct device_attribute *attr, char *buf)
+{
+	struct msm_otg *motg = the_msm_otg;
+	if (!motg)
+		return snprintf(buf, PAGE_SIZE, "0\n");
+	return snprintf(buf, PAGE_SIZE, "%d\n",
+			!!(motg->disable_peripheral));
+}
+static ssize_t store_usb_device_lock_state(struct device *pdev,
+		struct device_attribute *attr, const char *buff, size_t size)
+{
+	struct msm_otg *motg = the_msm_otg;
+	int enable = 0;
+	sscanf(buff, "%d", &enable);
+	pr_info("USBLOCK: %s usb lock\n",
+			enable ? "enabling" : "disabling");
+	msm_otg_enable_peripheral(motg, !enable);
+	return size;
+}
+static DEVICE_ATTR(usb_device_lock, S_IRUGO | S_IWUSR,
+		show_usb_device_lock_state, store_usb_device_lock_state);
+
+
 #define MSM_PMIC_ID_STATUS_DELAY	5 /* 5msec */
 static irqreturn_t msm_pmic_id_irq(int irq, void *data)
 {
@@ -3902,6 +3976,10 @@ static int __init msm_otg_probe(struct platform_device *pdev)
 			debug_bus_voting_enabled = true;
 	}
 
+	if (device_create_file(&pdev->dev, &dev_attr_usb_device_lock) < 0)
+		dev_dbg(&pdev->dev, " Failed to create device file(%s)!\n",
+				dev_attr_usb_device_lock.attr.name);
+
 	return 0;
 
 remove_phy:
@@ -3958,6 +4036,7 @@ static int __devexit msm_otg_remove(struct platform_device *pdev)
 #ifdef CONFIG_USB_HOST_NOTIFY
 	msm_host_notify_exit(motg);
 #endif
+	device_remove_file(&pdev->dev, &dev_attr_usb_device_lock);
 
 	if (pdev->dev.of_node)
 		msm_otg_setup_devices(pdev, motg->pdata->mode, false);

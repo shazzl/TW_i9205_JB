@@ -40,7 +40,7 @@
 #define WAKE_LOCK_TIME_IN_SENDKEY (HZ * 1)
 
 #define CONFIG_SYSFS_SEC_SND_JACK
-#if defined (CONFIG_MACH_MELIUS_EUR_OPEN) || defined (CONFIG_MACH_SERRANO_ATT)
+#if defined (CONFIG_MACH_MELIUS_EUR_OPEN) || defined (CONFIG_MACH_SERRANO_ATT) || defined(CONFIG_MACH_SERRANO_VZW)
 extern unsigned int system_rev;
 #endif
 
@@ -129,7 +129,7 @@ static void set_send_key_state(struct sec_jack_info *hi, int state)
 #ifdef CONFIG_MACH_MELIUS_EUR_OPEN
 	if (system_rev == 10)
 		btn_zones = pdata->buttons_zones_rev06;
-#elif defined (CONFIG_MACH_SERRANO_ATT)
+#elif defined (CONFIG_MACH_SERRANO_ATT) || defined(CONFIG_MACH_SERRANO_VZW)
 	if (system_rev > 2)
 		btn_zones = pdata->buttons_zones_rev03;
 #endif
@@ -222,7 +222,7 @@ static void determine_jack_type(struct sec_jack_info *hi)
 	int i;
 
 	struct adc_queue *adc_q = init_adc_queue();
-#if defined (CONFIG_MACH_SERRANO_ATT)
+#if defined (CONFIG_MACH_SERRANO_ATT) || defined(CONFIG_MACH_SERRANO_VZW)
 	if (system_rev > 2)
 		zones = pd->zones_rev03;
 #endif
@@ -487,6 +487,9 @@ static void sec_jack_det_work_func(struct work_struct *work)
 	}
 
 	/* set mic bias to enable adc */
+#ifndef CONFIG_EXT_EARMIC_BIAS
+	msleep(30);
+#endif
 	pdata->set_micbias_state(true);
 
 	/* to reduce noise in earjack when attaching */
@@ -614,11 +617,7 @@ static int sec_jack_probe(struct platform_device *pdev)
 
 	ret = request_threaded_irq(pdata->det_int, NULL,
 			sec_jack_det_irq_handler,
-#if defined(CONFIG_SAMSUNG_JACK_GNDLDET)
-			IRQF_TRIGGER_FALLING |
-#else
 			IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING |
-#endif
 			IRQF_ONESHOT, "sec_headset_detect", hi);
 
 	if (ret) {

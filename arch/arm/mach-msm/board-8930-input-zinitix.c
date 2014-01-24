@@ -294,7 +294,7 @@ void __init input_touchscreen_init(void)
 	gpio_tlmm_config(GPIO_CFG(GPIO_TOUCH_IRQ, 0,
 		GPIO_CFG_INPUT, GPIO_CFG_PULL_UP, GPIO_CFG_2MA), 1);
 #endif
-	zinitix_vdd_on(1);
+
 	i2c_register_board_info(MSM_8960_GSBI3_QUP_I2C_BUS_ID,
 				zinitix_info, ARRAY_SIZE(zinitix_info));
 }

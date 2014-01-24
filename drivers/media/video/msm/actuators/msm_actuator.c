@@ -13,7 +13,7 @@
 #include <linux/module.h>
 #include "msm_actuator.h"
 
-#if defined(CONFIG_MACH_CRATER) || defined(CONFIG_MACH_BAFFIN)
+#if defined(CONFIG_MACH_CRATER) || defined(CONFIG_MACH_BAFFIN)|| defined(CONFIG_MACH_CRATER_CHN_CTC)
 #define CONFIG_MACH_KS02    //temp ???
 #endif
 
@@ -45,6 +45,7 @@ static struct msm_actuator *actuators[] = {
 #endif
 };
 
+bool is_af_final = false; /*SEMCO request by Lizk 05112013*/	
 static int32_t msm_actuator_piezo_set_default_focus(
 	struct msm_actuator_ctrl_t *a_ctrl,
 	struct msm_actuator_move_params_t *move_params)
@@ -696,9 +697,11 @@ static int32_t msm_actuator_power_down(struct msm_actuator_ctrl_t *a_ctrl)
 		return rc;
 	usleep_range(1000, 2000);
 
-	kfree(a_ctrl->step_position_table);
+	if(a_ctrl->step_position_table != NULL)
+		kfree(a_ctrl->step_position_table);
 	a_ctrl->step_position_table = NULL;
-	kfree(a_ctrl->i2c_reg_tbl);
+	if(a_ctrl->i2c_reg_tbl != NULL)
+		kfree(a_ctrl->i2c_reg_tbl);
 	a_ctrl->i2c_reg_tbl = NULL;
 	a_ctrl->i2c_tbl_index = 0;
 	return rc;
@@ -762,6 +765,7 @@ static int32_t msm_actuator_init(struct msm_actuator_ctrl_t *a_ctrl,
 		a_ctrl->reg_tbl_size *
 		sizeof(struct msm_actuator_reg_params_t))) {
 		kfree(a_ctrl->i2c_reg_tbl);
+		a_ctrl->i2c_reg_tbl = NULL;
 		return -EFAULT;
 	}
 
@@ -773,6 +777,7 @@ static int32_t msm_actuator_init(struct msm_actuator_ctrl_t *a_ctrl,
 				GFP_KERNEL);
 			if (init_settings == NULL) {
 				kfree(a_ctrl->i2c_reg_tbl);
+				a_ctrl->i2c_reg_tbl = NULL;
 				pr_err("%s Error allocating memory for init_settings\n",
 					__func__);
 				return -EFAULT;
@@ -782,7 +787,9 @@ static int32_t msm_actuator_init(struct msm_actuator_ctrl_t *a_ctrl,
 				set_info->actuator_params.init_setting_size *
 				sizeof(struct reg_settings_t))) {
 				kfree(init_settings);
+				init_settings = NULL;
 				kfree(a_ctrl->i2c_reg_tbl);
+				a_ctrl->i2c_reg_tbl = NULL;
 				pr_err("%s Error copying init_settings\n",
 					__func__);
 				return -EFAULT;
@@ -792,8 +799,10 @@ static int32_t msm_actuator_init(struct msm_actuator_ctrl_t *a_ctrl,
 				a_ctrl->i2c_data_type,
 				init_settings);
 			kfree(init_settings);
+			init_settings = NULL;
 			if (rc < 0) {
 				kfree(a_ctrl->i2c_reg_tbl);
+				a_ctrl->i2c_reg_tbl = NULL;
 				pr_err("%s Error actuator_init_focus\n",
 					__func__);
 				return -EFAULT;
@@ -829,6 +838,7 @@ static int32_t msm_actuator_reg_init(struct msm_actuator_ctrl_t *a_ctrl,
 				GFP_KERNEL);
 			if (init_settings == NULL) {
 				kfree(a_ctrl->i2c_reg_tbl);
+				a_ctrl->i2c_reg_tbl = NULL;
 				pr_err("%s Error allocating memory for init_settings\n",
 					__func__);
 				return -EFAULT;
@@ -838,7 +848,9 @@ static int32_t msm_actuator_reg_init(struct msm_actuator_ctrl_t *a_ctrl,
 				set_info->actuator_params.init_setting_size *
 				sizeof(struct reg_settings_t))) {
 				kfree(init_settings);
+				init_settings = NULL;
 				kfree(a_ctrl->i2c_reg_tbl);
+				a_ctrl->i2c_reg_tbl = NULL;
 				pr_err("%s Error copying init_settings\n",
 					__func__);
 				return -EFAULT;
@@ -851,8 +863,10 @@ static int32_t msm_actuator_reg_init(struct msm_actuator_ctrl_t *a_ctrl,
 				a_ctrl->i2c_data_type,
 				init_settings);
 			kfree(init_settings);
+			init_settings = NULL;
 			if (rc < 0) {
 				kfree(a_ctrl->i2c_reg_tbl);
+				a_ctrl->i2c_reg_tbl = NULL;
 				pr_err("%s Error actuator_init_focus\n",
 					__func__);
 				return -EFAULT;
@@ -905,6 +919,12 @@ static int32_t msm_actuator_config(struct msm_actuator_ctrl_t *a_ctrl,
 		break;
 #endif
 #endif
+
+	case CFG_FINAL_AF:   /*SEMCO request by Lizk 05112013*/	
+		is_af_final = true;
+		pr_err("%s evan : kernel side - is_af_final= %d\n", __func__, is_af_final);
+		break;
+
 	default:
 		break;
 	}

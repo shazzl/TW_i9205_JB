@@ -447,6 +447,10 @@ int subsystem_restart_dev(struct subsys_device *dev)
 	else
 		restart_level = RESET_SOC;
 #endif
+
+	if (strcmp(dev->desc->name, "wcnss") == 0)
+		restart_level = RESET_SUBSYS_INDEPENDENT;
+
 	/*
 	 * If a system reboot/shutdown is underway, ignore subsystem errors.
 	 * However, print a message so that we know that a subsystem behaved

@@ -414,12 +414,13 @@ static int mipi_hx8369b_set_brightness_level(int bl_level)
 		case 190 ... 199:
 			backlightlevel = 8;  /* 15 */
 			break;
-		case 200 ... 209:
+		case 200 ... 204:
 			backlightlevel = 6 ;  /* 13 */
 			break;
-		case 210 ... 219:
+		case 205 ... 255:
 			backlightlevel = 5;  /* 11 */
 			break;
+#if 0
 		case 220 ... 229:
 			backlightlevel = 3;  /* 9 */
 			break;
@@ -432,6 +433,7 @@ static int mipi_hx8369b_set_brightness_level(int bl_level)
 		case 250 ... 255:
 			backlightlevel = 0;  /* 2 */
 			break;
+#endif
 		default:
 			backlightlevel = 23; /*32*/
 			break;

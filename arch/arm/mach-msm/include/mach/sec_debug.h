@@ -49,6 +49,7 @@ extern int sec_debug_is_enabled_for_ssr(void);
 #else
 static inline int sec_debug_init(void)
 {
+	return 0;
 }
 static inline int sec_debug_dump_stack(void) {}
 static inline void sec_debug_check_crash_key(unsigned int code, int value) {}
@@ -235,6 +236,18 @@ struct secmsg_log {
 	sec_debug_msg_log(__builtin_return_address(0), fmt, ##__VA_ARGS__)
 #else
 #define secdbg_msg(fmt, ...)
+#endif
+
+#ifdef CONFIG_SEC_DEBUG_AVC_LOG
+extern asmlinkage int sec_debug_avc_log(const char *fmt, ...);
+#define AVC_LOG_MAX 256
+struct secavc_log {
+	char msg[256];
+};
+#define secdbg_avc(fmt, ...) \
+	sec_debug_avc_log(fmt, ##__VA_ARGS__)
+#else
+#define secdbg_avc(fmt, ...)
 #endif
 
 #ifdef CONFIG_SEC_DEBUG_DCVS_LOG
@@ -470,6 +483,13 @@ struct sec_debug_subsys_data_modem {
 	struct sec_debug_subsys_simple_var_mon var_mon;
 };
 
+struct sec_debug_subsys_avc_log {
+	unsigned int secavc_idx_paddr;
+	unsigned int secavc_buf_paddr;
+	unsigned int secavc_struct_sz;
+	unsigned int secavc_array_cnt;
+};
+
 struct sec_debug_subsys_data_krait {
 	char name[16];
 	char state[16];
@@ -481,6 +501,7 @@ struct sec_debug_subsys_data_krait {
 	struct sec_debug_subsys_fb fb_info;
 	struct sec_debug_subsys_sched_log sched_log;
 	struct sec_debug_subsys_logger_log_info logger_log;
+	struct sec_debug_subsys_avc_log avc_log;
 };
 
 struct sec_debug_subsys_private {

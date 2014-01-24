@@ -234,6 +234,7 @@ struct sr030pc50_ctrl {
 	unsigned int lux;
 	int awb_mode;
 	int samsungapp;
+	int mirror_mode;
 };
 
 struct sr030pc50_i2c_reg_conf {

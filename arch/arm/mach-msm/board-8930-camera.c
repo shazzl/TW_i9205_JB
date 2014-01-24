@@ -289,6 +289,7 @@ static struct msm_camera_sensor_flash_src msm_flash_src = {
 
 #if !defined(CONFIG_MACH_BISCOTTO)
 #if defined(CONFIG_IMX175)
+#if !defined(CONFIG_MACH_CRATER_CHN_CTC)
 static struct msm_camera_sensor_flash_src imx175_flash_src = {
 	.flash_sr_type = MSM_CAMERA_FLASH_SRC_LED1,
 #if !defined(CONFIG_MACH_KS02)
@@ -296,6 +297,15 @@ static struct msm_camera_sensor_flash_src imx175_flash_src = {
 #endif
 	._fsrc.ext_driver_src.led_flash_en = GPIO_MSM_FLASH_NOW,
 };
+#else
+static struct msm_camera_sensor_flash_src imx175_flash_src = {
+	.flash_sr_type = MSM_CAMERA_FLASH_SRC_LED1,
+#if !defined(CONFIG_MACH_KS02)
+	._fsrc.ext_driver_src.led_en = GPIO_MSM_FLASH_NOW,//3
+#endif
+	._fsrc.ext_driver_src.led_flash_en = GPIO_FLASH_LED_UNLOCK,
+}; 
+#endif
 #endif
 
 static struct msm_bus_vectors cam_init_vectors[] = {
@@ -1054,7 +1064,9 @@ static struct msm_camera_sensor_platform_info sensor_board_info_sr200pc20m = {
 	.csi_lane_params = &sr200pc20m_csi_lane_params,
 	.sensor_reset   = GPIO_CAM1_RST_N,
 //	.sensor_pwd     = GPIO_CAM_CORE_EN,
+#if !defined(CONFIG_MACH_CRATER_CHN_CTC)
 	.sensor_stby    = GPIO_MAIN_STBY,
+#endif	
 	.vt_sensor_stby	= GPIO_VT_STBY,
 	.vt_sensor_reset        = GPIO_CAM2_RST_N,
 	.mclk   = GPIO_SUB_CAM_MCLK,
@@ -1130,7 +1142,7 @@ static ssize_t back_camera_type_show(struct device *dev,
 #elif defined(CONFIG_S5K5CCGX)
 	char cam_type[] = "SLSI_S5K5CCGX\n";
 #else
-	char cam_type[] = "Rear default camera\n";
+	char cam_type[] = "N\n";
 #endif
 
 	return snprintf(buf, sizeof(cam_type), "%s", cam_type);
@@ -1148,7 +1160,7 @@ static ssize_t front_camera_type_show(struct device *dev,
 #elif defined(CONFIG_SR030PC50)
 	char cam_type[] = "SILICON_SR030PC50\n";
 #else
-	char cam_type[] = "Front default camera\n";
+	char cam_type[] = "N\n";
 #endif
 
 	return snprintf(buf, sizeof(cam_type), "%s", cam_type);
@@ -1164,7 +1176,7 @@ static ssize_t back_camera_firmware_show(struct device *dev,
 #elif defined(CONFIG_S5K5CCGX)
 	char cam_fw[] = "S5K5CCGX\n";
 #else
-	char cam_fw[] = "Rear default camera\n";
+	char cam_fw[] = "N\n";
 #endif
 
 	return snprintf(buf, sizeof(cam_fw), "%s", cam_fw);
@@ -1183,7 +1195,7 @@ static ssize_t front_camera_firmware_show(struct device *dev,
 #elif defined(CONFIG_SR030PC50)
 	char cam_fw[] = "SILICON_SR030PC50\n";
 #else
-	char cam_fw[] = "Front default camera\n";
+	char cam_fw[] = "N\n";
 #endif
 
 	return snprintf(buf, sizeof(cam_fw), "%s", cam_fw);
@@ -1198,9 +1210,9 @@ static u8 gpio_flash_set;
 #endif
 
 #if defined(CONFIG_IMX175)
+bool Torch_On;
 #if defined(CONFIG_MACH_MELIUS)
 /* FLASH IC : KTD2692*/
-bool Torch_On;
 static DEFINE_SPINLOCK(flash_ctrl_lock);
 static void KTD2692_set_flash(unsigned int ctl_cmd)
 {
@@ -1233,6 +1245,10 @@ static void KTD2692_set_flash(unsigned int ctl_cmd)
 	udelay(350);
 }
 
+static void gpio_set_ENM(bool bSet)
+{
+	gpio_set_value_cansleep(GPIO_MSM_FLASH_NOW, bSet);
+}
 #elif defined (CONFIG_MACH_SERRANO) || defined (CONFIG_MACH_CRATER) || defined (CONFIG_MACH_BAFFIN) || defined (CONFIG_MACH_CANE)
 static DEFINE_SPINLOCK(flash_ctrl_lock);
 static void MIC2871YMK_set_flash(unsigned int ctl_cmd)
@@ -1377,15 +1393,32 @@ static ssize_t cameraflash_file_cmd_store(struct device *dev,
 #if defined(CONFIG_MACH_MELIUS)
 	if (value == 0) {
 		cam_err("[Torch flash]OFF\n");
-		KTD2692_set_flash(0xA0);
+#if defined(CONFIG_MACH_MELIUS_VZW) || defined(CONFIG_MACH_MELIUS_SPR) || defined(CONFIG_MACH_MELIUS_USC)
+		if (system_rev < 0X01) {
+#else
+		if (system_rev < 0x07) {
+#endif		
+			gpio_set_ENM(false);
+		} else {
+			KTD2692_set_flash(0xA0);
+		}
 		Torch_On = false;
 	} else {
 		cam_err("[Torch flash]ON\n");
-		KTD2692_set_flash(0x00);
-		KTD2692_set_flash(0xA1); /* Movie mode */
+#if defined(CONFIG_MACH_MELIUS_VZW) || defined(CONFIG_MACH_MELIUS_SPR) || defined(CONFIG_MACH_MELIUS_USC)
+		if (system_rev < 0X01) {
+#else
+		if (system_rev < 0x07) {
+#endif		
+			gpio_set_ENM(true);
+		} else {
+			KTD2692_set_flash(0x00);
+			KTD2692_set_flash(0xA1); /* Movie mode */
+		}
 		Torch_On = true;
 	}
 #elif defined(CONFIG_MACH_SERRANO) || defined(CONFIG_MACH_CRATER) || defined (CONFIG_MACH_BAFFIN) || defined (CONFIG_MACH_CANE)
+	Torch_On = value;	
 	MIC2871YMK_set_flash(value);
 
 #elif defined(CONFIG_MACH_KS02)
@@ -1400,6 +1433,7 @@ static ssize_t cameraflash_file_cmd_store(struct device *dev,
 		printk("[Torch flash]OFF\n");
 		gpio_set_value_cansleep(GPIO_CAM_FLASH_SET, 0);
 		gpio_set_value_cansleep(GPIO_CAM_FLASH_EN, 0);
+		Torch_On = false;
 
 
 	} else {
@@ -1408,6 +1442,7 @@ static ssize_t cameraflash_file_cmd_store(struct device *dev,
 		udelay(0);//1:flash_enable
 		gpio_set_value_cansleep(GPIO_CAM_FLASH_SET, 1);
 		udelay(1);//1:torch_enable
+		Torch_On = true;
 	}
 #endif
 #endif
@@ -1590,7 +1625,7 @@ struct i2c_board_info msm8930_camera_i2c_boardinfo[] = {
 #endif
 #ifdef CONFIG_SR130PC20
 	{
-		I2C_BOARD_INFO("sr130pc20", 0x20),
+		I2C_BOARD_INFO("sr130pc20", 0x28),
 		.platform_data = &msm_camera_sensor_sr130pc20_data,
 	},
 #endif
@@ -1649,5 +1684,19 @@ struct msm_camera_board_info msm8930_camera_board_info = {
 	.board_info = msm8930_camera_i2c_boardinfo,
 	.num_i2c_board_info = ARRAY_SIZE(msm8930_camera_i2c_boardinfo),
 };
+#if defined(CONFIG_MACH_CRATER_CHN_CTC)
+struct i2c_board_info msm8930_camera_sr200pc20m_i2c_board_info[] = {
+	{
+		I2C_BOARD_INFO("sr200pc20m", 0x20),
+		.platform_data = &msm_camera_sensor_sr200pc20m_data,
+	},
+};
+
+struct msm_camera_board_info msm8930_camera_sr200pc20m_board_info = {
+	.board_info = msm8930_camera_sr200pc20m_i2c_board_info,
+	.num_i2c_board_info = ARRAY_SIZE(msm8930_camera_sr200pc20m_i2c_board_info),
+};
+#endif
+
 #endif
 #endif

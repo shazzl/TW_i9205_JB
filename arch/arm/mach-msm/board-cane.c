@@ -108,6 +108,9 @@
 #ifdef CONFIG_OPTICAL_GP2AP020A00F
 #include <linux/gp2ap020.h>
 #endif
+#ifdef CONFIG_PROXIMITY_SENSOR
+#include <linux/gp2a.h>
+#endif
 #ifdef CONFIG_BCM2079X_NFC_I2C
 #include <linux/nfc/bcm2079x.h>
 #endif
@@ -121,6 +124,10 @@
 #ifdef CONFIG_USB_SWITCH_TSU6721
 #include <linux/i2c/tsu6721.h>
 #include <linux/switch.h>
+#endif
+
+#ifdef CONFIG_NFC_PN547
+#include <linux/pn547.h>
 #endif
 
 #ifdef CONFIG_MFD_MAX77693
@@ -329,6 +336,72 @@ static struct i2c_board_info max77693_i2c_board_info[] = {
 
 };
 #endif
+
+#ifdef CONFIG_NFC_PN547
+static void pn547_conf_gpio(void)
+{
+	pr_debug("pn547_conf_gpio\n");
+
+	gpio_tlmm_config(GPIO_CFG(GPIO_NFC_SDA, 0, GPIO_CFG_INPUT,
+		GPIO_CFG_NO_PULL, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
+	gpio_tlmm_config(GPIO_CFG(GPIO_NFC_SCL, 0, GPIO_CFG_INPUT,
+		GPIO_CFG_NO_PULL, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
+}
+
+static int __init pn547_init(void)
+{
+	gpio_tlmm_config(GPIO_CFG(GPIO_NFC_IRQ, 0, GPIO_CFG_INPUT,
+		GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
+
+	gpio_tlmm_config(GPIO_CFG(GPIO_NFC_EN, 0, GPIO_CFG_OUTPUT,
+		GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
+
+	gpio_tlmm_config(GPIO_CFG(GPIO_NFC_FIRMWARE, 0, GPIO_CFG_OUTPUT,
+		GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
+
+	gpio_tlmm_config(GPIO_CFG(GPIO_NFC_CLK_REQ, 0, GPIO_CFG_INPUT,
+		GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
+
+	pn547_conf_gpio();
+	return 0;
+}
+#endif
+
+#ifdef CONFIG_NFC_PN547
+static struct i2c_gpio_platform_data pn547_i2c_gpio_data = {
+	.sda_pin = GPIO_NFC_SDA,
+	.scl_pin = GPIO_NFC_SCL,
+	.udelay = 5,
+};
+
+static struct platform_device pn547_i2c_gpio_device = {
+	.name = "i2c-gpio",
+	.id = MSM_NFC_I2C_BUS_ID,
+	.dev = {
+		.platform_data = &pn547_i2c_gpio_data,
+	},
+};
+
+static struct pn547_i2c_platform_data pn547_pdata = {
+	.conf_gpio = pn547_conf_gpio,
+	.irq_gpio = GPIO_NFC_IRQ,
+	.ven_gpio = GPIO_NFC_EN,
+	.firm_gpio = GPIO_NFC_FIRMWARE,
+#ifdef CONFIG_NFC_PN547_CLOCK_REQUEST
+	.clk_req_gpio = GPIO_NFC_CLK_REQ,
+	.clk_req_irq = MSM_GPIO_TO_INT(GPIO_NFC_CLK_REQ),
+#endif
+};
+
+static struct i2c_board_info pn547_info[] __initdata = {
+	{
+		I2C_BOARD_INFO("pn547", 0x2b),
+		.irq = MSM_GPIO_TO_INT(GPIO_NFC_IRQ),
+		.platform_data = &pn547_pdata,
+	},
+};
+#endif
+
 
 #if  defined(CONFIG_IR_REMOCON_FPGA)
 static void irda_wake_en(bool onoff)
@@ -872,7 +945,8 @@ static struct platform_device msm_vibrator_device = {
 };
 #endif
 
-#if defined(CONFIG_INPUT_YAS_SENSORS) || defined(CONFIG_OPTICAL_GP2AP020A00F)
+#if defined(CONFIG_INPUT_YAS_SENSORS) || defined(CONFIG_OPTICAL_GP2AP020A00F) \
+	|| defined(CONFIG_PROXIMITY_SENSOR)
 enum {
 	SNS_PWR_OFF,
 	SNS_PWR_ON,
@@ -1007,7 +1081,7 @@ static struct i2c_board_info sns_i2c_board_info_rev02[] = {
 #endif // CONFIG_INPUT_YAS_SENSORS
 
 #if defined(CONFIG_INPUT_YAS_SENSORS) || defined(CONFIG_OPTICAL_GP2AP020A00F) \
-	|| defined(CONFIG_INPUT_MPU6050)
+	|| defined(CONFIG_INPUT_MPU6050) || defined(CONFIG_PROXIMITY_SENSOR)
 static int __init sensor_device_init(void)
 {
 	sensor_power_on_vdd(SNS_PWR_ON, SNS_PWR_KEEP);
@@ -1108,7 +1182,25 @@ static void sensor_power_on_vdd(int onoff_l9, int onoff_lvs2)
 }
 #endif
 
-#ifdef CONFIG_OPTICAL_GP2AP020A00F
+
+#if  defined(CONFIG_PROXIMITY_SENSOR) || defined(CONFIG_OPTICAL_GP2AP020A00F)
+static void opt_power_on(bool on);
+static void opt_led_on(bool on);
+
+#ifdef CONFIG_PROXIMITY_SENSOR
+struct gp2a_platform_data gp2a_pdata = {
+	.power = opt_power_on,
+	.p_out = GPIO_PROX_INT,
+};
+
+static struct i2c_board_info opt_i2c_board_info[] = {
+	{
+		I2C_BOARD_INFO("gp2a", 0x44),
+		.platform_data = &gp2a_pdata,
+	},
+};
+#endif
+
 static struct i2c_gpio_platform_data opt_i2c_gpio_data = {
 	.sda_pin = GPIO_SENSOR_ALS_SDA,
 	.scl_pin = GPIO_SENSOR_ALS_SCL,
@@ -1123,13 +1215,12 @@ static struct platform_device opt_i2c_gpio_device = {
 	},
 };
 
+
+#ifdef CONFIG_OPTICAL_GP2AP020A00F
 enum {
 	GP2AP020 = 0,
 	GP2AP030,
 };
-
-/* static void opt_power_on(bool on); */
-static void opt_led_on(bool on);
 
 static struct gp2ap020_pdata gp2a020_data = {
 /*	.power_on = opt_power_on,*/
@@ -1146,7 +1237,7 @@ static struct i2c_board_info opt_i2c_board_info[] = {
 		.platform_data = &gp2a020_data,
 	},
 };
-
+#endif
 static void opt_init(void)
 {
 	int ret = 0;
@@ -1189,15 +1280,14 @@ static void opt_init(void)
 	gp2a020_data.d0_value[D0_COND3_B] = 859;
 */
 }
-/*
+
 static void opt_power_on(bool on)
 {
 	int onoff = on ? SNS_PWR_ON : SNS_PWR_OFF;
-	sensor_power_on_vdd(onoff, SNS_PWR_KEEP);
-	if (onoff == SNS_PWR_ON)
-		msleep(20);
+	sensor_power_on_vdd(SNS_PWR_KEEP, onoff);
+	opt_led_on(on);
 }
-*/
+
 static struct regulator *vsensor_3p0;
 static void opt_led_on(bool on)
 {
@@ -3864,12 +3954,17 @@ static struct platform_device *common_devices[] __initdata = {
 #ifdef CONFIG_KEYBOARD_GPIO
 	&msm8960_gpio_keys_device,
 #endif
-#ifdef CONFIG_OPTICAL_GP2AP020A00F
+#if  defined(CONFIG_OPTICAL_GP2AP020A00F) || defined(CONFIG_PROXIMITY_SENSOR)
 	&opt_i2c_gpio_device,
 #endif
 #ifdef CONFIG_BCM2079X_NFC_I2C
 	&bcm2079x_i2c_gpio_device,
 #endif
+
+#ifdef CONFIG_NFC_PN547
+	&pn547_i2c_gpio_device,
+#endif
+
 #if defined(CONFIG_LEDS_AN30259A)
 	&leds_i2c_device,
 #endif
@@ -4202,7 +4297,15 @@ static struct i2c_registry msm8930_i2c_devices[] __initdata = {
 		ARRAY_SIZE(nfc_bcm2079x_info),
 	},
 #endif
-#ifdef CONFIG_OPTICAL_GP2AP020A00F
+
+#ifdef CONFIG_NFC_PN547
+	{
+		MSM_NFC_I2C_BUS_ID,
+		pn547_info,
+		ARRAY_SIZE(pn547_info),
+	},
+#endif
+#if defined(CONFIG_OPTICAL_GP2AP020A00F) || defined(CONFIG_PROXIMITY_SENSOR)
 	{
 		MSM_OPT_I2C_BUS_ID,
 		opt_i2c_board_info,
@@ -4646,10 +4749,14 @@ void __init msm8930_cane_init(void)
 #ifdef CONFIG_BCM2079X_NFC_I2C
 	bcm2079x_init();
 #endif
+#ifdef CONFIG_NFC_PN547
+	pn547_init();
+#endif
+
 #ifdef CONFIG_INPUT_YAS_SENSORS
 	sensor_device_init();
 #endif
-#ifdef CONFIG_OPTICAL_GP2AP020A00F
+#if  defined(CONFIG_OPTICAL_GP2AP020A00F) || defined(CONFIG_PROXIMITY_SENSOR)
 	opt_init();
 #endif
 	if (PLATFORM_IS_CHARM25())

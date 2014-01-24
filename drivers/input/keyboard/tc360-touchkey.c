@@ -38,10 +38,10 @@
 #if defined(CONFIG_MACH_SERRANO_SPR) || defined(CONFIG_MACH_SERRANO_USC) \
 	||defined(CONFIG_MACH_SERRANO_VZW) ||defined(CONFIG_MACH_SERRANO_TMO) ||defined(CONFIG_MACH_SERRANO_ATT)
 #define TC360_FW_NAME		"tc360_serrano_usa"
-#define SUPPORT_MODULE_VER	0x2
+#define SUPPORT_MODULE_VER	0x4
 #elif defined(CONFIG_MACH_SERRANO_EUR_3G) || defined(CONFIG_MACH_SERRANO_EUR_LTE)
 #define TC360_FW_NAME		"tc360_serrano_eur"
-#define SUPPORT_MODULE_VER	0x3
+#define SUPPORT_MODULE_VER	0x5
 #else
 #define TC360_FW_NAME		"tc360"
 #define SUPPORT_MODULE_VER	0x0
@@ -118,6 +118,7 @@ enum {
 struct fdata_struct {
 	struct device			*dummy_dev;
 	u8				fw_flash_status;
+	u8				fw_update_skip;
 };
 #endif
 
@@ -1084,6 +1085,9 @@ static int tc360_flash_fw(struct tc360_data *data, u8 fw_path, bool force)
 
 	if (module_ver >= 0 && module_ver != SUPPORT_MODULE_VER) {
 		ret = HAVE_LATEST_FW;
+	#if defined(SEC_FAC_TK)		
+		data->fdata->fw_update_skip = 1;
+	#endif
 		dev_info(&client->dev, "IC module does not support fw update (%#x)\n", module_ver);
 		goto out;
 	}
@@ -1091,20 +1095,33 @@ static int tc360_flash_fw(struct tc360_data *data, u8 fw_path, bool force)
 #endif
 	if (fw_ver >= data->fw_img->first_fw_ver && !force) {
 		ret = HAVE_LATEST_FW;
+	#if defined(SEC_FAC_TK)	
+		data->fdata->fw_update_skip = 1;		
+	#endif
 		dev_info(&client->dev, "IC aleady have latest firmware (%#x)\n",
 			 fw_ver);
 		goto out;
 	}
+	
 	dev_info(&client->dev, "fw update to %#x (from %#x) (%s)\n",
 		 data->fw_img->first_fw_ver, fw_ver,
 		 (force) ? "force" : "ver mismatch");
-
+	#if defined(SEC_FAC_TK)	
+	data->fdata->fw_update_skip = 0;
+	#endif
 	queue_work(data->fw_wq, &data->fw_work);
 
 	return FW_UPDATE_RUNNING;
 
 out:
-	data->fw_flash_state = STATE_NORMAL;
+#if defined(SEC_FAC_TK)
+	if (data->fdata->fw_flash_status == DOWNLOADING) {
+		enable_irq(client->irq);
+		data->enabled = true;
+		data->fdata->fw_flash_status = PASS;
+	} else
+		data->fw_flash_state = STATE_NORMAL;
+#endif
 	tc360_unload_fw(data, fw_path);
 	return ret;
 }
@@ -1208,6 +1225,7 @@ static ssize_t fac_fw_ver_ic_show(struct device *dev,
 		ret = -EPERM;
 		goto out;
 	}
+	data->fdata->fw_update_skip = 0;
 
 	ver = tc360_get_fw_ver(data);
 	if (ver < 0) {
@@ -1271,8 +1289,9 @@ static ssize_t fac_fw_update_store(struct device *dev,
 	int ret;
 	u8 fw_path;
 
-	if (!data->enabled) {
-		dev_err(&client->dev, "%s: device is disabled\n.", __func__);
+	if (!data->enabled ||data->fdata->fw_update_skip == 1) {
+		dev_err(&client->dev, "%s: device is disabled (fw_update_skip =% d)\n.",
+			__func__, data->fdata->fw_update_skip);
 		return -EPERM;
 	}
 
@@ -1334,6 +1353,7 @@ static ssize_t fac_fw_update_status_show(struct device *dev,
 
 	dev_info(&client->dev, "%s: %#x\n", __func__,
 		 data->fdata->fw_flash_status);
+	data->fdata->fw_update_skip = 0;
 
 out:
 	return ret;

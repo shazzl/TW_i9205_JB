@@ -1067,7 +1067,7 @@ void cabc_onoff_ctrl(int value)
 
 	if (value)
 		_cabc_on = 1;
-		
+
 	if (value >= 5)
 		cmc624_state.power_lut_idx = LUT_LEVEL_OUTDOOR_2;
 	else

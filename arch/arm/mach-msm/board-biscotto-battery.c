@@ -40,19 +40,19 @@ static unsigned int sec_bat_recovery_mode;
 
 static sec_charging_current_t charging_current_table[] = {
 	{1800,	2100,	200,	40*60},	/* Unknown */
-	{0,	0,	0,	0},					/* Battery */
-	{0,	0,	0,	0},					/* UPS */
+	{0,	0,	0,	0},	/* Battery */
+	{0,	0,	0,	0},	/* UPS */
 	{1800,	2100,	200,	40*60},	/* MAINS */
 	{460,	460,	200,	40*60},	/* USB */
 	{460,	460,	200,	40*60},	/* USB_DCP */
 	{1000,	1000,	200,	40*60},	/* USB_CDP */
 	{460,	460,	200,	40*60},	/* USB_ACA */
 	{1700,	2100,	200,	40*60},	/* MISC */
-	{0,	0,	0,	0},					/* Cardock */
+	{0,	0,	0,	0},	/* Cardock */
 	{500,	500,	200,	40*60},	/* Wireless */
 	{1800,	2100,	200,	40*60},	/* UartOff */
-	{0,	0,	0,	0},					/* OTG */
-	{0,	0,	0,	0},					/* BMS */
+	{0,	0,	0,	0},	/* OTG */
+	{0,	0,	0,	0},	/* BMS */
 };
 
 static bool sec_bat_adc_none_init(
@@ -105,11 +105,6 @@ static int sec_bat_adc_ic_read(unsigned int channel) {return 0; }
 
 static bool sec_bat_gpio_init(void)
 {
-	/* Enable 5V Boost(GPIO_63) */
-	gpio_tlmm_config(GPIO_CFG(GPIO_5V_ENABLE, 0,
-			GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA), 1);
-	gpio_set_value(GPIO_5V_ENABLE, 1);
-
 	return true;
 }
 
@@ -343,25 +338,33 @@ static bool sec_bat_get_temperature_callback(
 static bool sec_fg_fuelalert_process(bool is_fuel_alerted) {return true; }
 
 static const sec_bat_adc_table_data_t temp_table[] = {
-	{27188,	700},
-	{27605,	650},
-	{28182,	600},
-	{28748,	550},
-	{29265,	500},
-	{29900,	450},
-	{30981,	400},
-	{31896,	350},
-	{32820,	300},
-	{33956,	250},
-	{35037,	200},
-	{36083,	150},
-	{37180,	100},
-	{38267,	50},
-	{39148,	0},
-	{39916,	-50},
-	{40586,	-100},
-	{41222,	-150},
-	{41573,	-200},
+	{217100,	700},
+	{257600,	650},
+	{281500,	620},
+	{305600,	600},
+	{317600,	580},
+	{356100,	550},
+	{400800,	500},
+	{455400,	470},
+	{480300,	450},
+	{520600,	430},
+	{571400,	400},
+	{663400,	350},
+	{757900,	300},
+	{878300,	250},
+	{988700,	200},
+	{1099300,	150},
+	{1198900,	100},
+	{1291100,	50},
+	{1401200,	0},
+	{1449400,	-30},
+	{1487100,	-50},
+	{1509000,	-70},
+	{1557800,	-100},
+	{1613400,	-150},
+	{1662100,	-200},
+	{1700600,	-250},
+	{1727700,	-300},
 };
 
 /* ADC region should be exclusive */
@@ -390,19 +393,22 @@ static int polling_time_table[] = {
 /* for ADC fuelgauge */
 /* soc should be 0.01% unit */
 static const sec_bat_adc_table_data_t adc_ocv2soc_table[] = {
+	{2500,	0},
 	{3400,	0},
-	{3500,	400},
-	{3600,	1300},
-	{3700,	4200},
-	{3800,	5000},
-	{3900,	6000},
-	{4000,	7000},
-	{4100,	7900},
-	{4200,	8500},
+	{3509,	500},
+	{3636,	1000},
+	{3708,	2500},
+	{3770,	4500},
+	{3891,	6500},
 	{4350,	10000},
+	{5000,	10000},
 };
 
 static const sec_bat_adc_table_data_t adc_adc2vcell_table[] = {
+	{2500000,	2500},
+	{3400000,	3400},
+	{4350000,	4350},
+	{5000000,	5000},
 };
 
 static struct battery_data_t biscotto_battery_data[] = {
@@ -522,23 +528,23 @@ sec_battery_platform_data_t sec_battery_pdata = {
 	.temp_amb_adc_table_size =
 		sizeof(temp_table)/sizeof(sec_bat_adc_table_data_t),
 
-	.temp_check_type = SEC_BATTERY_TEMP_CHECK_NONE,
+	.temp_check_type = SEC_BATTERY_TEMP_CHECK_TEMP,
 	.temp_check_count = 1,
 
-	.temp_high_threshold_event = 600,
-	.temp_high_recovery_event = 400,
-	.temp_low_threshold_event = -50,
-	.temp_low_recovery_event = 0,
+	.temp_high_threshold_event = 480,
+	.temp_high_recovery_event = 430,
+	.temp_low_threshold_event = -30,
+	.temp_low_recovery_event = -10,
 
-	.temp_high_threshold_normal = 600,
-	.temp_high_recovery_normal = 400,
-	.temp_low_threshold_normal = -50,
-	.temp_low_recovery_normal = 0,
+	.temp_high_threshold_normal = 480,
+	.temp_high_recovery_normal = 430,
+	.temp_low_threshold_normal = -30,
+	.temp_low_recovery_normal = -10,
 
-	.temp_high_threshold_lpm = 600,
-	.temp_high_recovery_lpm = 400,
-	.temp_low_threshold_lpm = -50,
-	.temp_low_recovery_lpm = 0,
+	.temp_high_threshold_lpm = 480,
+	.temp_high_recovery_lpm = 430,
+	.temp_low_threshold_lpm = -30,
+	.temp_low_recovery_lpm = -10,
 
 	.full_check_type = SEC_BATTERY_FULLCHARGED_CHGPSY,
 	.full_check_type_2nd = SEC_BATTERY_FULLCHARGED_TIME,
@@ -639,8 +645,6 @@ __setup("androidboot.boot_recovery=", sec_bat_current_boot_mode);
 
 void __init msm8960_init_battery(void)
 {
-
-
 	gpio_tlmm_config(GPIO_CFG(GPIO_FUELGAUGE_I2C_SCL, 0, GPIO_CFG_OUTPUT,
 		 GPIO_CFG_NO_PULL, GPIO_CFG_2MA), 1);
 	gpio_tlmm_config(GPIO_CFG(GPIO_FUELGAUGE_I2C_SDA,  0, GPIO_CFG_OUTPUT,

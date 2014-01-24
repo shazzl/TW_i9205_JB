@@ -372,10 +372,10 @@ void __init input_touchkey_init(void)
 
 	gpio_tlmm_config(GPIO_CFG(GPIO_TOUCHKEY_I2C_SDA,
 			0, GPIO_CFG_INPUT,
-			GPIO_CFG_NO_PULL, GPIO_CFG_2MA), 1);
+			GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA), 1);
 	gpio_tlmm_config(GPIO_CFG(GPIO_TOUCHKEY_I2C_SCL,
 			0, GPIO_CFG_INPUT,
-			GPIO_CFG_NO_PULL, GPIO_CFG_2MA), 1);
+			GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA), 1);
 
 	#if defined(CONFIG_MACH_GOLDEN)
 	gpio_tlmm_config(GPIO_CFG(GPIO_TKEY_INT, 0,

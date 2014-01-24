@@ -834,7 +834,8 @@ u32 vidc_delete_addr_table(struct video_client_ctx *client_ctx,
 		buf_addr_table[i].client_data = NULL;
 	}
 	*kernel_vaddr = buf_addr_table[i].kernel_vaddr;
-	if (buf_addr_table[i].buff_ion_handle) {
+	if (!IS_ERR_OR_NULL(buf_addr_table[i].buff_ion_handle)) {
+		if (!IS_ERR_OR_NULL(client_ctx->user_ion_client)) {
 		ion_unmap_kernel(client_ctx->user_ion_client,
 				buf_addr_table[i].buff_ion_handle);
 		if (!res_trk_check_for_sec_session() &&
@@ -847,6 +848,11 @@ u32 vidc_delete_addr_table(struct video_client_ctx *client_ctx,
 		ion_free(client_ctx->user_ion_client,
 				buf_addr_table[i].buff_ion_handle);
 		buf_addr_table[i].buff_ion_handle = NULL;
+		} else {
+			pr_err("%s: invalid user_ion_client", __func__);
+		}
+	} else {
+		pr_err("%s: invalid buff_ion_handle", __func__);
 	}
 	if (i < (*num_of_buffers - 1)) {
 		buf_addr_table[i].client_data =

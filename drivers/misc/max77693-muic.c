@@ -229,13 +229,20 @@ static int max77693_muic_set_comp2_comn1_pass2
 			, __func__, type);
 		return -EINVAL;
 	}
-
+#if defined(CONFIG_MUIC_DET_JACK)
+	cntl1_val = (val << COMN1SW_SHIFT) | (val << COMP2SW_SHIFT) |(1 << MICEN_SHIFT);
+	cntl1_msk = COMN1SW_MASK | COMP2SW_MASK | MICEN_MASK;
+#else
 	cntl1_val = (val << COMN1SW_SHIFT) | (val << COMP2SW_SHIFT);
 	cntl1_msk = COMN1SW_MASK | COMP2SW_MASK;
-
+#endif
 	max77693_update_reg(info->muic, MAX77693_MUIC_REG_CTRL1, cntl1_val,
 			    cntl1_msk);
 
+#if defined(CONFIG_MUIC_DET_JACK)
+	max77693_update_reg(info->muic, MAX77693_MUIC_REG_CTRL2,	(1<<CTRL2_CPEn_SHIFT),
+				CTRL2_CPEn_MASK);
+#endif
 	return ret;
 }
 
@@ -360,16 +367,26 @@ static ssize_t max77693_muic_set_manualsw(struct device *dev,
 					  const char *buf, size_t count)
 {
 	struct max77693_muic_info *info = dev_get_drvdata(dev);
+#if defined(CONFIG_MACH_MELIUS_CHN_CTC)
+	struct max77693_muic_data *mdata = info->muic_data;
+#endif
 
 	dev_info(info->dev, "func:%s buf:%s,count:%d\n", __func__, buf, count);
 
 	if (!strncasecmp(buf, "PDA", 3)) {
 		info->muic_data->sw_path = AP_USB_MODE;
 		dev_info(info->dev, "%s: AP_USB_MODE\n", __func__);
+#if defined(CONFIG_MACH_MELIUS_CHN_CTC)
+		max77693_muic_set_usb_path(info, AP_USB_MODE);
+		mdata->usb_cb(USB_CABLE_ATTACHED);
+#endif
 	} else if (!strncasecmp(buf, "MODEM", 5)) {
 		info->muic_data->sw_path = CP_USB_MODE;
 		dev_info(info->dev, "%s: CP_USB_MODE\n", __func__);
 		max77693_muic_set_usb_path(info, CP_USB_MODE);
+#if defined(CONFIG_MACH_MELIUS_CHN_CTC)
+		mdata->usb_cb(USB_CABLE_DETACHED);
+#endif
 	} else
 		dev_warn(info->dev, "%s: Wrong command\n", __func__);
 
@@ -1741,7 +1758,10 @@ static int max77693_muic_handle_attach(struct max77693_muic_info *info,
 #endif
 	case ADC_CEA936ATYPE1_CHG:
 	case ADC_CEA936ATYPE2_CHG:
+#if !defined(CONFIG_MACH_MELIUS_SKT) && !defined(CONFIG_MACH_MELIUS_KTT) && \
+	!defined(CONFIG_MACH_MELIUS_LGT)
 	case ADC_INCOMPATIBLE_CHG:
+#endif
 	case ADC_OPEN:
 		switch (chgtyp) {
 		case CHGTYP_USB:
@@ -2031,6 +2051,11 @@ static void max77693_muic_detect_dev(struct max77693_muic_info *info, int irq)
 			    info->cable_type == CABLE_TYPE_AUDIODOCK_MUIC)
 				intr = INT_DETACH;
 		}
+	}
+
+	if (!adcerr && adc == ADC_AUDIODOCK) {
+		if (!chgtyp)
+			intr = INT_DETACH;
 	}
 
 	if (intr == INT_ATTACH) {

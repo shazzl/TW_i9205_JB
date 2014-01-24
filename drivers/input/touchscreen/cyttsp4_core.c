@@ -2956,12 +2956,12 @@ exit:
 static void cyttsp4_watchdog_timer(unsigned long handle)
 {
 	struct cyttsp4_core_data *cd = (struct cyttsp4_core_data *)handle;
-
-	dev_vdbg(cd->dev, "%s: Timer triggered\n", __func__);
-
+	
 	if (!cd)
 		return;
 
+	dev_vdbg(cd->dev, "%s: Timer triggered\n", __func__);
+		
 	if (!work_pending(&cd->watchdog_work))
 		schedule_work(&cd->watchdog_work);
 
@@ -3375,14 +3375,17 @@ static int cyttsp4_request_toggle_lowpower_(struct cyttsp4_device *ttsp,
 static int cyttsp4_set_loader_(struct cyttsp4_device *ttsp,
 		cyttsp4_loader_func func)
 {
-	struct cyttsp4_core *core = ttsp->core;
-	struct cyttsp4_core_data *cd = dev_get_drvdata(&core->dev);
+	struct cyttsp4_core *core;
+	struct cyttsp4_core_data *cd;
 	int rc = 0;
-
-	dev_vdbg(cd->dev, "%s: enter...\n", __func__);
-
+	
 	if (!ttsp || !func)
 		return -EINVAL;
+		
+	core = ttsp->core;
+	cd = dev_get_drvdata(&core->dev);	
+
+	dev_vdbg(cd->dev, "%s: enter...\n", __func__);
 
 	mutex_lock(&cd->system_lock);
 	if (!cd->loader) {
@@ -4052,7 +4055,7 @@ static ssize_t cyttsp4_hw_reset_store(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t size)
 {
 	struct cyttsp4_core_data *cd = dev_get_drvdata(dev);
-	int rc = 0;
+	int rc;
 
 	rc = cyttsp4_startup(cd);
 	if (rc < 0)
@@ -4119,7 +4122,7 @@ static ssize_t cyttsp4_drv_irq_store(struct device *dev,
 {
 	struct cyttsp4_core_data *cd = dev_get_drvdata(dev);
 	unsigned long value;
-	int retval = 0;
+	int retval;
 
 	retval = kstrtoul(buf, 10, &value);
 	if (retval < 0) {
@@ -4171,7 +4174,7 @@ static ssize_t cyttsp4_drv_debug_store(struct device *dev,
 {
 	struct cyttsp4_core_data *cd = dev_get_drvdata(dev);
 	unsigned long value = 0;
-	int rc = 0;
+	int rc;
 
 	rc = kstrtoul(buf, 10, &value);
 	if (rc < 0) {
@@ -4201,11 +4204,11 @@ static ssize_t cyttsp4_drv_debug_store(struct device *dev,
 		break;
 	case CY_DBG_SOFT_RESET:
 		dev_info(dev, "%s: SOFT RESET (cd=%p)\n", __func__, cd);
-		rc = cyttsp4_hw_soft_reset(cd);
+		cyttsp4_hw_soft_reset(cd);
 		break;
 	case CY_DBG_RESET:
 		dev_info(dev, "%s: HARD RESET (cd=%p)\n", __func__, cd);
-		rc = cyttsp4_hw_hard_reset(cd);
+		cyttsp4_hw_hard_reset(cd);
 		break;
 	default:
 		dev_err(dev, "%s: Invalid value\n", __func__);
@@ -4553,7 +4556,7 @@ struct cyttsp4_core_driver cyttsp4_core_driver = {
 
 static int __init cyttsp4_core_init(void)
 {
-	int rc = 0;
+	int rc;
 
 	rc = cyttsp4_register_core_driver(&cyttsp4_core_driver);
 	pr_info("%s: Cypress TTSP v4 core driver (Built %s) rc=%d\n",

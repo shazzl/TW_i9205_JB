@@ -9,8 +9,6 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-#define DEBUG
-
 #include <linux/clk.h>
 #include <linux/delay.h>
 #include <linux/gpio.h>
@@ -39,9 +37,6 @@
 #include <mach/msm8930-gpio.h>
 #include <asm/system_info.h>
 /* 8930 machine driver */
-#ifdef CONFIG_MFD_MAX77693
-#include <linux/mfd/max77693-private.h>
-#endif
 #define MSM8930_SPK_ON 1
 #define MSM8930_SPK_OFF 0
 
@@ -60,11 +55,8 @@
 #define TAPAN_EXT_CLK_RATE_REV10 12288000
 #define TAPAN_EXT_CLK_RATE 9600000
 #define I2S_MCLK_RATE_REV10 12288000
-#ifdef CONFIG_MACH_CRATERTD_CHN_3G
-#define I2S_MCLK_RATE 12288000
-#else
 #define I2S_MCLK_RATE 23040000
-#endif
+
 #define NO_OF_BITS_PER_SAMPLE  16
 
 #define TAPAN_MBHC_DEF_BUTTONS 8
@@ -153,6 +145,7 @@ static struct clk *tx_bit_clk;
 static int msm8930_btsco_rate = BTSCO_RATE_8KHZ;
 static int msm8930_btsco_ch = 1;
 static int msm_hdmi_rx_ch = 2;
+static int msm8230_auxpcm_rate = BTSCO_RATE_8KHZ;
 static struct clk *codec_clk;
 static int clk_users;
 
@@ -383,23 +376,25 @@ static void msm8930_dock_control_gpio(u32 onoff)
 
 	pr_info("%s: Enable dock en gpio %u, onoff %d\n",
 				__func__, GPIO_VPS_AMP_EN, onoff);
-#ifdef CONFIG_MFD_MAX77693
-	max77693_muic_set_audio_switch(onoff);
-#else
+
 	if (onoff) {
 
 		gpio_direction_output(GPIO_VPS_AMP_EN, 1);
 	} else {
 		gpio_direction_output(GPIO_VPS_AMP_EN, 0);
 	}
-#endif
 }
 
 static void msm8930_dock_power_amp_on(u32 dock)
 {
 
 	if (dock & (DOCK_POS | DOCK_NEG)) {
+#if defined (CONFIG_MACH_LT02)
+		if ((msm8930_dock_pamp & DOCK_POS) &&
+			(msm8930_dock_pamp & DOCK_NEG)) {
+#else
 		if (msm8930_dock_pamp & DOCK_POS) {
+#endif
 
 			pr_err("%s() External Dock Ampl already "
 				"turned on. spk = 0x%08x\n", __func__, dock);
@@ -407,8 +402,12 @@ static void msm8930_dock_power_amp_on(u32 dock)
 		}
 
 		msm8930_dock_pamp |= dock;
-
+#if defined (CONFIG_MACH_LT02)
+		if ((msm8930_dock_pamp & DOCK_POS) &&
+			(msm8930_dock_pamp & DOCK_NEG))
+#else
 		if (msm8930_dock_pamp & DOCK_POS)
+#endif
 				msm8930_dock_control_gpio(1);
 
 			pr_debug("%s: slepping 4 ms after turning on external "
@@ -475,6 +474,10 @@ static int msm8930_dock_event(struct snd_soc_dapm_widget *w,
 	if (SND_SOC_DAPM_EVENT_ON(event)) {
 		if (!strncmp(w->name, "Dock Left Pos", 14))
 			msm8930_dock_power_amp_on(DOCK_POS);
+#if defined (CONFIG_MACH_LT02)
+		else if (!strncmp(w->name, "Dock Left Neg", 14))
+			msm8930_dock_power_amp_on(DOCK_NEG);
+#endif
 		else {
 			pr_err("%s() Invalid Dock Widget = %s\n",
 					__func__, w->name);
@@ -483,6 +486,10 @@ static int msm8930_dock_event(struct snd_soc_dapm_widget *w,
 	} else {
 		if (!strncmp(w->name, "Dock Left Pos", 14))
 			msm8930_dock_power_amp_off(DOCK_POS);
+#if defined (CONFIG_MACH_LT02)
+		else if (!strncmp(w->name, "Dock Left Neg", 14))
+			msm8930_dock_power_amp_off(DOCK_NEG);
+#endif
 		else {
 			pr_err("%s() Invalid Dock Widget = %s\n",
 					__func__, w->name);
@@ -623,6 +630,9 @@ static const struct snd_soc_dapm_widget msm8930_dapm_widgets[] = {
 	SND_SOC_DAPM_SPK("Ext Spk Left Neg", msm8930_spkramp_event),
 #if defined(CONFIG_DOCK_EN)
 	SND_SOC_DAPM_SPK("Dock Left Pos", msm8930_dock_event),
+#if defined (CONFIG_MACH_LT02)
+	SND_SOC_DAPM_SPK("Dock Left Neg", msm8930_dock_event),
+#endif
 #endif /* CONFIG_DOCK_EN */
 #ifdef CONFIG_EXT_SUBMIC_BIAS
 	SND_SOC_DAPM_MIC("Sub Mic", msm8930_sub_micbias_event),
@@ -660,7 +670,12 @@ static const struct snd_soc_dapm_route common_audio_map[] = {
 	{"Ext Spk Left Pos", NULL, "LINEOUT1"},
 	{"Ext Spk Left Neg", NULL, "LINEOUT2"},
 #if defined(CONFIG_DOCK_EN)
+#if defined (CONFIG_MACH_LT02)
+	{"Dock Left Pos", NULL, "HPHL"},
+	{"Dock Left Neg", NULL, "HPHR"},
+#else
 	{"Dock Left Pos", NULL, "RDAC5 MUX"},
+#endif
 #endif
 	/* Headset Mic */
 #ifdef CONFIG_EXT_EARMIC_BIAS
@@ -771,6 +786,12 @@ static const char *btsco_rate_text[] = {"8000", "16000"};
 static const struct soc_enum msm8930_btsco_enum[] = {
 		SOC_ENUM_SINGLE_EXT(2, btsco_rate_text),
 };
+
+static const char *auxpcm_rate_text[] = {"rate_8000", "rate_16000"};
+static const struct soc_enum msm8930_auxpcm_enum[] = {
+		SOC_ENUM_SINGLE_EXT(2, auxpcm_rate_text),
+};
+
 static int msm8930_i2s_rx_ch_get(struct snd_kcontrol *kcontrol,
 	struct snd_ctl_elem_value *ucontrol)
 {
@@ -873,6 +894,35 @@ static int msm8930_btsco_rate_put(struct snd_kcontrol *kcontrol,
 	return 0;
 }
 
+static int msm8930_auxpcm_rate_get(struct snd_kcontrol *kcontrol,
+				struct snd_ctl_elem_value *ucontrol)
+{
+	pr_debug("%s: msm8930_auxpcm_rate  = %d", __func__,
+		msm8230_auxpcm_rate);
+	ucontrol->value.integer.value[0] = msm8230_auxpcm_rate;
+	return 0;
+}
+
+static int msm8930_auxpcm_rate_put(struct snd_kcontrol *kcontrol,
+				struct snd_ctl_elem_value *ucontrol)
+{
+	switch (ucontrol->value.integer.value[0]) {
+	case 0:
+		msm8230_auxpcm_rate = BTSCO_RATE_8KHZ;
+		break;
+	case 1:
+		msm8230_auxpcm_rate = BTSCO_RATE_16KHZ;
+		break;
+	default:
+		msm8230_auxpcm_rate = BTSCO_RATE_8KHZ;
+		break;
+	}
+	pr_info("%s: msm8930_auxpcm_rate_put  = %d", __func__,
+		msm8230_auxpcm_rate);
+
+	return 0;
+}
+
 static const char *pmic_spk_gain_text[] = {
 	"NEG_6_DB", "NEG_4_DB", "NEG_2_DB", "ZERO_DB", "POS_2_DB", "POS_4_DB",
 	"POS_6_DB", "POS_8_DB", "POS_10_DB", "POS_12_DB", "POS_14_DB",
@@ -935,6 +985,8 @@ static const struct snd_kcontrol_new tapan_msm8930_i2s_controls[] = {
 		msm8930_i2s_tx_ch_get, msm8930_i2s_tx_ch_put),
 	SOC_ENUM_EXT("PMIC SPK Gain", msm8930_pmic_spk_gain_enum[0],
 		msm8930_pmic_gain_get, msm8930_pmic_gain_put),
+	SOC_ENUM_EXT("AUX PCM SampleRate", msm8930_auxpcm_enum[0],
+		msm8930_auxpcm_rate_get, msm8930_auxpcm_rate_put),
 };
 
 static const struct snd_kcontrol_new tapan_msm8930_controls[] = {
@@ -1356,8 +1408,11 @@ static int msm8930_auxpcm_be_params_fixup(struct snd_soc_pcm_runtime *rtd,
 					SNDRV_PCM_HW_PARAM_CHANNELS);
 
 	/* PCM only supports mono output with 8khz sample rate */
-	rate->min = rate->max = 8000;
+	rate->min = rate->max = msm8230_auxpcm_rate; // 8000
 	channels->min = channels->max = 1;
+
+	pr_info("%s: msm8930_auxpcm_be_params_fixup  = %d", __func__,
+		msm8230_auxpcm_rate);
 
 	return 0;
 }
@@ -1538,6 +1593,7 @@ static int msm8930_auxpcm_startup(struct snd_pcm_substream *substream)
 
 	pr_debug("%s(): substream = %s, auxpcm_rsc_ref counter = %d\n",
 		__func__, substream->name, atomic_read(&auxpcm_rsc_ref));
+
 	if (atomic_inc_return(&auxpcm_rsc_ref) == 1)
 		ret = msm8930_aux_pcm_get_gpios();
 	if (ret < 0) {

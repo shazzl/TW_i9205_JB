@@ -116,25 +116,23 @@ static int gp2a_i2c_read(struct gp2a_data *gp2a,
 	u8 reg, unsigned char *rbuf, int len)
 {
 	int ret = -1;
-	struct i2c_msg msg;
+	struct i2c_msg msg[2];
 	struct i2c_client *client = gp2a->client;
 
 	if (unlikely((client == NULL) || (!client->adapter)))
 		return -ENODEV;
 
-	msg.addr = client->addr;
-	msg.flags = I2C_M_WR;
-	msg.len = 1;
-	msg.buf = &reg;
+	msg[0].addr = client->addr;
+	msg[0].flags = I2C_M_WR;
+	msg[0].len = 1;
+	msg[0].buf = &reg;
 
-	ret = i2c_transfer(client->adapter, &msg, 1);
+	msg[1].addr = client->addr;
+	msg[1].flags = I2c_M_RD;
+	msg[1].len = len;
+	msg[1].buf = rbuf;
 
-	if (likely(ret >= 0)) {
-		msg.flags = I2c_M_RD;
-		msg.len = len;
-		msg.buf = rbuf;
-		ret = i2c_transfer(client->adapter, &msg, 1);
-	}
+	ret = i2c_transfer(client->adapter, &msg[0], 2);
 
 	if (unlikely(ret < 0))
 		pr_err("i2c transfer error ret=%d\n", ret);
@@ -188,16 +186,17 @@ int lightsensor_get_adc(struct gp2a_data *data)
 	int ret = 0;
 	int d0_boundary = 92;
 	int d0_custom[9] = { 0, };
-	int i = 0;
+
 	mutex_lock(&data->data_mutex);
 	ret = gp2a_i2c_read(data, DATA0_LSB, get_data, sizeof(get_data));
 	mutex_unlock(&data->data_mutex);
 	if (ret < 0)
 		return lx_prev;
-	D0_raw_data = (get_data[1] << 8) | get_data[0];	/* clear */
-	D1_raw_data = (get_data[3] << 8) | get_data[2];	/* IR */
-	if (data->pdata->version) {  /* GP2AP 030 */
+	D0_raw_data = (get_data[1] << 8) | get_data[0]; /* clear */
+	D1_raw_data = (get_data[3] << 8) | get_data[2]; /* IR */
+	if (data->pdata->version) { /* GP2AP 030 */
 		if (data->pdata->d0_value[0]) {
+			int i = 0;
 			do {
 				d0_custom[i] = data->pdata->d0_value[i];
 			} while (i++ < 8);
@@ -500,7 +499,7 @@ done:
 
 	if(err<=-2)
 		{
-           data->offset_value=808528944; 
+           data->offset_value=12; 
 		   err=4;
 	    }
 #endif	
@@ -1434,22 +1433,44 @@ static int gp2a_i2c_probe(struct i2c_client *client,
 	err = sensors_register(gp2a->light_sensor_device,
 		gp2a, additional_light_attrs, "light_sensor");
 	if (err) {
-		pr_err("%s: cound not register sensor device\n", __func__);		
+		pr_err("%s: cound not register sensor device\n", __func__);
 		goto err_sysfs_create_factory_light;
 	}
+
 	err = sensors_register(gp2a->proximity_sensor_device,
 		gp2a, additional_proximity_attrs, "proximity_sensor");
 	if (err) {
 		pr_err("%s: cound not register sensor device\n", __func__);
 		goto err_sysfs_create_factory_proximity;
 	}
-	
+
+#ifdef CONFIG_SENSOR_USE_SYMLINK
+	err =  sensors_initialize_symlink(gp2a->proximity_input_dev);
+	if (err) {
+		pr_err("%s: cound not make proximity sensor symlink(%d).\n",
+			__func__, err);
+		goto err_sensors_initialize_symlink_proximity;
+	}
+
+	err =  sensors_initialize_symlink(gp2a->light_input_dev);
+	if (err) {
+		pr_err("%s: cound not make light sensor symlink(%d).\n",
+			__func__, err);
+		goto err_sensors_initialize_symlink_light;
+	}
+#endif
+
 	input_report_abs(gp2a->proximity_input_dev, ABS_DISTANCE, 1);
 
 	pr_info("%s : probe success!\n", __func__);
 
 	return 0;
 
+#ifdef CONFIG_SENSOR_USE_SYMLINK
+err_sensors_initialize_symlink_light:
+	sensors_delete_symlink(gp2a->proximity_input_dev);
+err_sensors_initialize_symlink_proximity:
+#endif
 err_sysfs_create_factory_proximity:
 err_sysfs_create_factory_light:
 	free_irq(gp2a->irq, gp2a);
@@ -1492,7 +1513,7 @@ static int gp2a_i2c_remove(struct i2c_client *client)
 		gp2a->proximity_input_dev = NULL;
 	}
 
-	cancel_delayed_work(&gp2a->light_work);
+	cancel_delayed_work_sync(&gp2a->light_work);
 	flush_delayed_work(&gp2a->light_work);
 
 	mutex_destroy(&gp2a->light_mutex);
@@ -1525,7 +1546,7 @@ static void gp2a_i2c_shutdown(struct i2c_client *client)
 		gp2a->proximity_input_dev = NULL;
 	}
 
-	cancel_delayed_work(&gp2a->light_work);
+	cancel_delayed_work_sync(&gp2a->light_work);
 	flush_delayed_work(&gp2a->light_work);
 
 	mutex_destroy(&gp2a->light_mutex);

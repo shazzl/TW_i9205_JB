@@ -22,3 +22,4 @@ menuconfig MSM_VIBRATOR
         help
           Say Y to enable MSM_VIBRATOR support.
 
+#

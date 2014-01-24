@@ -105,7 +105,7 @@ def scan_configs():
         names[os.path.basename(n)[8:-10]] = n
     for n in glob.glob('arch/arm/configs/msm8930_ks02_[sk]*_defconfig'):
         names[os.path.basename(n)[8:-10]] = n
-    for n in glob.glob('arch/arm/configs/msm8930_lt02_[as]*_defconfig'):
+    for n in glob.glob('arch/arm/configs/msm8930_lt02_[asc]*_defconfig'):
         names[os.path.basename(n)[8:-10]] = n
     for n in glob.glob('arch/arm/configs/msm8930_melius_[acklstuzv]*_defconfig'):
         names[os.path.basename(n)[8:-10]] = n
@@ -114,6 +114,8 @@ def scan_configs():
     for n in glob.glob('arch/arm/configs/msm8930_serrano_[astuv][a-z][cortw]*_defconfig'):
         names[os.path.basename(n)[8:-10]] = n
     for n in glob.glob('arch/arm/configs/msm8930_serrano_eur_*_defconfig'):
+        names[os.path.basename(n)[8:-10]] = n
+    for n in glob.glob('arch/arm/configs/msm8930_express_eur_*_defconfig'):
         names[os.path.basename(n)[8:-10]] = n
     return names
 
@@ -174,12 +176,16 @@ def build(target):
         base_defconfig = 'msm8930_%s_defconfig' % target[0:7]
     elif target[0:4] == 'ks02':
         base_defconfig = 'msm8930_%s_01_defconfig' % target[0:4]
+    elif target[0:8] == 'lt02_chn':
+        base_defconfig = 'msm8930_%s-chn_defconfig' % target[0:4]
     elif target[0:6] == 'melius':
         base_defconfig = 'msm8930_%s_01_defconfig' % target[0:6]
     elif target[0:11] == 'serrano_eur':
         base_defconfig = 'msm8930_%s_defconfig' % target[0:7]
     elif target[0:7] == 'serrano':
         base_defconfig = 'msm8930_%s_usa_defconfig' % target[0:7]
+    elif target[0:7] == 'express':
+        base_defconfig = 'msm8930_%s_defconfig' % target[0:7]
     else:
         base_defconfig = 'msm8930_%s_defconfig' % target[:-4]
     variant_defconfig = 'msm8930_%s_defconfig' % target

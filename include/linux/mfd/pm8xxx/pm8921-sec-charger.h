@@ -103,6 +103,7 @@ struct pm8921_sec_battery_data {
 
 	struct pm8921_charging_current *chg_current_table;
 	unsigned int			*siop_table;
+	void					(*monitor_additional_check)(void);
 };
 
 /*******************************************

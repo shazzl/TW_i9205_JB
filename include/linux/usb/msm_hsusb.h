@@ -225,6 +225,9 @@ struct msm_otg_platform_data {
 	bool core_clk_always_on_workaround;
 	struct msm_bus_scale_pdata *bus_scale_table;
 	const char *mhl_dev_name;
+#ifdef CONFIG_USB_SWITCH_TSU6721
+	int (*get_usb_state)(int data);
+#endif
 };
 
 /* Timeout (in msec) values (min - max) associated with OTG timers */
@@ -354,6 +357,7 @@ struct msm_otg {
 	struct timer_list sm_work_timer;
 	int smartdock;
 #endif
+	bool disable_peripheral;
 	struct msm_xo_voter *xo_handle;
 	uint32_t bus_perf_client;
 	bool mhl_enabled;
@@ -481,5 +485,8 @@ static inline int msm_ep_unconfig(struct usb_ep *ep)
 {
 	return -ENODEV;
 }
+#endif
+#ifdef CONFIG_USB_SWITCH_TSU6721
+int msm_otg_get_usb_state(int data);
 #endif
 #endif

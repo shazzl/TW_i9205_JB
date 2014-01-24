@@ -52,6 +52,9 @@
 #ifdef CONFIG_SAMSUNG_CMC624
 #define MSM_CMC624_I2C_BUS_ID   18
 #endif
+#ifdef CONFIG_GRIP_SENSOR
+#define MSM_GRIP_I2C_BUS_ID   23
+#endif
 #ifdef CONFIG_REGULATOR_LP8720
 #define MSM_LP8720_I2C_BUS_ID   25
 #endif

@@ -1099,6 +1099,8 @@ int msm_server_v4l2_unsubscribe_event(struct v4l2_fh *fh,
 		isp_event = (struct msm_isp_event_ctrl *)
 			(*((uint32_t *)ev.u.data));
 		if (isp_event) {
+			if (ev.type == (V4L2_EVENT_PRIVATE_START +
+						MSM_CAM_RESP_STAT_EVT_MSG)) {
 			if (isp_event->isp_data.isp_msg.len != 0 &&
 				isp_event->isp_data.isp_msg.data != NULL) {
 				kfree(isp_event->isp_data.isp_msg.data);
@@ -1107,6 +1109,7 @@ int msm_server_v4l2_unsubscribe_event(struct v4l2_fh *fh,
 			}
 			kfree(isp_event);
 			*((uint32_t *)ev.u.data) = 0;
+			}
 		}
 	}
 
@@ -1495,9 +1498,10 @@ static int msm_close_server(struct file *fp)
 					pmctl->mctl_release = NULL;
 					pmctl->mctl_cmd = NULL;
 				}
-				msm_cam_server_send_error_evt(pmctl,
-					V4L2_EVENT_PRIVATE_START +
-					MSM_CAM_APP_NOTIFY_ERROR_EVENT);
+				if (pmctl)
+					msm_cam_server_send_error_evt(pmctl,
+						V4L2_EVENT_PRIVATE_START +
+						MSM_CAM_APP_NOTIFY_ERROR_EVENT);
 			}
 		}
 		sub.type = V4L2_EVENT_ALL;
@@ -2826,10 +2830,15 @@ static int msm_open_config(struct inode *inode, struct file *fp)
 		return rc;
 	}
 	config_cam->use_count++;
-
+	if (NULL != g_server_dev.pcam_active[config_cam->dev_num]) {  //Debug Patch : P130612-0176
 	/* assume there is only one active camera possible*/
 	config_cam->p_mctl = msm_cam_server_get_mctl(
 		g_server_dev.pcam_active[config_cam->dev_num]->mctl_handle);
+	}
+	else{
+	pr_err("%s :g_server_dev.pcam_active[config_cam->dev_num] is NULL\n",__func__);
+	return -1;
+	}
 	if (!config_cam->p_mctl) {
 		pr_err("%s: cannot find mctl\n", __func__);
 		return -ENODEV;
@@ -3058,6 +3067,8 @@ static long msm_ioctl_config(struct file *fp, unsigned int cmd,
 						break;
 					}
 					kfree(k_msg_value);
+					k_isp_event->isp_data.isp_msg.len = 0;
+					k_isp_event->isp_data.isp_msg.data = 0;
 					k_msg_value = NULL;
 				}
 			}
@@ -3071,6 +3082,7 @@ static long msm_ioctl_config(struct file *fp, unsigned int cmd,
 			break;
 		}
 		kfree(k_isp_event);
+		*((uint32_t *)ev.u.data) = 0;
 		k_isp_event = NULL;
 
 		/* Copy the v4l2_event structure back to the user*/

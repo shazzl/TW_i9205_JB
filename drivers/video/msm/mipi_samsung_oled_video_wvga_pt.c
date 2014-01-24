@@ -312,6 +312,7 @@ static struct dsi_cmd_desc samsung_mtp_read_cmds[] = {
 		sizeof(contention_error_remove), contention_error_remove},
 };
 /********************* ACL *******************/
+/*
 static char ACL_COND_SET_50[] = {
 	0xC1,
 	0x4D, 0x96, 0x1D, 0x00, 0x00, 0x01,
@@ -320,6 +321,7 @@ static char ACL_COND_SET_50[] = {
 	0x08, 0x0F, 0x16, 0x1D, 0x24, 0x2A,
 	0x31, 0x38, 0x3F, 0x46,
 };
+*/
 static char ACL_COND_SET_40[] = {
 	0xC1,
 	0x4D, 0x96, 0x1D, 0x00, 0x00, 0x01,
@@ -328,10 +330,11 @@ static char ACL_COND_SET_40[] = {
 	0x06, 0x0C, 0x11, 0x16, 0x1C, 0x21,
 	0x26, 0x2B, 0x31, 0x36,
 };
-
+/*
 static struct dsi_cmd_desc DSI_CMD_ACL_50 = {
 	DTYPE_DCS_LWRITE, 1, 0, 0, 0,
 	sizeof(ACL_COND_SET_50), ACL_COND_SET_50 };
+*/
 static struct dsi_cmd_desc DSI_CMD_ACL_40 = {
 	DTYPE_DCS_LWRITE, 1, 0, 0, 0,
 	sizeof(ACL_COND_SET_40), ACL_COND_SET_40 };
@@ -360,7 +363,7 @@ static struct dsi_cmd_desc_LCD lcd_acl_table[] = {
 	{40, "230", &DSI_CMD_ACL_40},
 	{40, "240", &DSI_CMD_ACL_40},
 	{40, "250", &DSI_CMD_ACL_40},
-	{50, "300", &DSI_CMD_ACL_50},
+	{40, "300", &DSI_CMD_ACL_40},
 };
 
 static struct dsi_cmd_desc samsung_panel_acl_on_cmds[] = {
@@ -541,10 +544,7 @@ static int get_candela_index(int bl_level)
 		backlightlevel = GAMMA_250CD; /* 22 */
 		break;
 	case 255:
-		if (mipi_pd.msd->dstat.auto_brightness == 0)
-			backlightlevel = GAMMA_250CD; /* 22 */
-		else
-			backlightlevel = GAMMA_300CD; /* 23 */
+		backlightlevel = GAMMA_300CD; /* 23 */
 		break;
 	default:
 		backlightlevel = GAMMA_40CD; /* 1 */
@@ -897,7 +897,7 @@ static int __init mipi_video_samsung_oled_wvga_pt_init(void)
 	pinfo.mipi.frame_rate = 60;
 	pinfo.mipi.dsi_phy_db = &dsi_video_mode_phy_db;
 	pinfo.mipi.force_clk_lane_hs = 1;
-	pinfo.mipi.esc_byte_ratio = 2;
+	pinfo.mipi.esc_byte_ratio = 1;
 
 
 	ret = mipi_samsung_device_register(&pinfo, MIPI_DSI_PRIM,

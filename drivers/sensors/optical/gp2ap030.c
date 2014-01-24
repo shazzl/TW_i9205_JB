@@ -115,9 +115,17 @@ static u8 gp2a_original_image[COL][2] = {
 	/*	{0x05 , 0x00}, */
 	/*	{0x06 , 0xFF}, */
 	/*	{0x07 , 0xFF}, */
+#if defined(CONFIG_MACH_CRATER_CHN_CTC)
+	{0x08, 0x06},		/*PS mode LTH(Loff):  (??mm) */
+#else
 	{0x08, 0x09},		/*PS mode LTH(Loff):  (??mm) */
+#endif
 	{0x09, 0x00},		/*PS mode LTH(Loff) : */
+#if defined(CONFIG_MACH_CRATER_CHN_CTC)
+	{0x0A, 0x08},		/*PS mode HTH(Lon) : (??mm) */
+#else
 	{0x0A, 0x0C},		/*PS mode HTH(Lon) : (??mm) */
+#endif
 	{0x0B, 0x00},		/* PS mode HTH(Lon) : */
 	/* {0x13 , 0x08}, by sharp for internal calculation (type:0) */
 	/*alternating mode (PS+ALS), TYPE=1
@@ -1282,9 +1290,11 @@ static int gp2a_opt_probe(struct platform_device *pdev)
 	if (pdata->gp2a_led_on)
 		pdata->gp2a_led_on(1);
 
+#ifndef CONFIG_MACH_CRATER_CHN_CTC
 	if (pdata->gp2a_get_threshold) {
 		gp2a_update_threshold(pdata->gp2a_get_threshold(), false);
 	}
+#endif
 
 	/* allocate driver_data */
 	gp2a = kzalloc(sizeof(struct gp2a_data), GFP_KERNEL);

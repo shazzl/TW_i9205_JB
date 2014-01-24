@@ -100,7 +100,8 @@
 
 #define MATRIX_X 19
 #define MATRIX_Y 14
-#define MATRIX_REAL_Y    10
+#define MATRIX_REAL_X	18
+#define MATRIX_REAL_Y	11
 
 /* Feature */
 /*#######################################*/
@@ -112,8 +113,7 @@
 #define FOR_DEBUGGING_TEST_DOWNLOADFW_BIN 0
 #define TSP_SEC_SYSFS			1
 #define ITDEV	0
-#define SHOW_COORDINATE	0
-#define DEBUG_INFO	0
+#define DEBUG_INFO	1
 #define HIGH_RESOLUTION							0
 #define TREAT_ERR				0
 #define FORCE_RELEASE				0

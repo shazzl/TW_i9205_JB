@@ -124,6 +124,12 @@
 #include <linux/mfd/max77693.h>
 #include <linux/mfd/max77693-private.h>
 #endif
+
+#ifdef CONFIG_SEC_THERMISTOR
+#include <mach/sec_thermistor.h>
+#include <mach/msm8930-thermistor.h>
+#endif
+
 #include "timer.h"
 #include "devices.h"
 #include "devices-msm8x60.h"
@@ -897,7 +903,7 @@ static struct mpu6k_input_platform_data mpu6k_pdata_rev03 = {
 			*/
 	.orientation = {-1, 0, 0,
 			0, 1, 0,
-			0, 0, 1},
+			0, 0, -1},
 	.acc_cal_path = "/efs/calibration_data",
 	.gyro_cal_path = "/efs/gyro_cal_data",
 };
@@ -2990,6 +2996,9 @@ static struct gpio_keys_button gpio_keys_button[] = {
 		.wakeup			= 0,
 		.debounce_interval	= 5, /* ms */
 		.desc			= "Vol Up",
+#if defined(CONFIG_KEYBOARD_GPIO_EXTENDED_RESUME_EVENT)
+		.support_evt		= NOT_SUPPORT_RESUME_KEY_EVENT,
+#endif
 	},
 	{
 		.code			= KEY_VOLUMEDOWN,
@@ -2999,6 +3008,9 @@ static struct gpio_keys_button gpio_keys_button[] = {
 		.wakeup			= 0,
 		.debounce_interval	= 5, /* ms */
 		.desc			= "Vol Down",
+#if defined(CONFIG_KEYBOARD_GPIO_EXTENDED_RESUME_EVENT)
+		.support_evt		= NOT_SUPPORT_RESUME_KEY_EVENT,
+#endif
 	},
 	{
 		.code			= KEY_HOMEPAGE,
@@ -3008,6 +3020,9 @@ static struct gpio_keys_button gpio_keys_button[] = {
 		.wakeup			= 1,
 		.debounce_interval	= 5, /* ms */
 		.desc			= "Home",
+#if defined(CONFIG_KEYBOARD_GPIO_EXTENDED_RESUME_EVENT)
+		.support_evt		= SUPPORT_RESUME_KEY_EVENT,
+#endif
 	},
 };
 static struct gpio_keys_platform_data gpio_keys_platform_data = {
@@ -3122,7 +3137,11 @@ static struct msm_i2c_platform_data msm8960_i2c_qup_gsbi4_pdata = {
 };
 
 static struct msm_i2c_platform_data msm8960_i2c_qup_gsbi3_pdata = {
+#if defined(CONFIG_MACH_BAFFINVETD_CHN_3G)
+	.clk_freq = 400000,
+#else
 	.clk_freq = 100000,
+#endif	
 	.src_clk_rate = 24000000,
 };
 #if (defined CONFIG_2MIC_ES305) && (defined CONFIG_2MIC_QUP_I2C)
@@ -3828,6 +3847,9 @@ static struct platform_device *common_devices[] __initdata = {
 #ifdef CONFIG_MSM_ACTUATOR /* For Camera Actuator EEPROM By Teddy */
 	&actuator_i2c_gpio_device,
 #endif
+#ifdef CONFIG_SEC_THERMISTOR
+	&sec_device_thermistor,
+#endif
 #ifdef CONFIG_ANDROID_RAM_CONSOLE
 	&ram_console_device,
 #endif
@@ -4476,10 +4498,20 @@ static struct i2c_board_info __initdata zinitix_i2c_info[]  = {
 
 static void g2tsp_i2c_to_gpio_enable(int enable)
 {
-//	if (enable)
-//		s3c_gpio_cfgall_range(G2TSP_I2C2_SDA, 2, S3C_GPIO_SFN(1), S3C_GPIO_PULL_NONE);
-//	else
-//		s3c_gpio_cfgall_range(G2TSP_I2C2_SDA, 2, S3C_GPIO_SFN(3), S3C_GPIO_PULL_UP);
+
+//	ret = gpio_request(G2TSP_I2C2_SDA, "g2_int");
+	//if (ret != 0) {
+		//printk(KERN_ERR"G2TSP_I2C2_SDA !!!!!!!!!!!!, ret=%d", ret);
+//	}
+	
+	if (enable){
+		gpio_tlmm_config(GPIO_CFG(G2TSP_I2C2_SDA, 0,GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA), 1);
+		gpio_tlmm_config(GPIO_CFG(G2TSP_I2C2_SCL, 0,GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA), 1);
+	}
+	else{
+		gpio_tlmm_config(GPIO_CFG(G2TSP_I2C2_SDA, 1,GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA), 1);
+		gpio_tlmm_config(GPIO_CFG(G2TSP_I2C2_SCL, 1,GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA), 1);
+	}
 }
 
 static void g2tsp_init(void)
@@ -4497,30 +4529,7 @@ static void g2tsp_suspend(void)
 
 }
 
-static int g2tsp_reset(void)
-{
-/*
-    if(gpio_request(G2TSP_GPIO_RESET,"G2TSP_GPIO_RESET"))
-    {
-        printk("%s : request port error!\n", __FUNCTION__);
-        return -1;
-    }
-
-    gpio_direction_output(G2TSP_GPIO_RESET, 1); 
-
-    gpio_set_value(G2TSP_GPIO_RESET, 1);
-    mdelay(100);
-    gpio_set_value(G2TSP_GPIO_RESET, 0);
-    mdelay(100);
-    gpio_set_value(G2TSP_GPIO_RESET, 1);
-    mdelay(100);
-
-    gpio_free(G2TSP_GPIO_RESET);
-*/
-	return 0;
-}
-
-static int g2tsp_power(int onoff)
+static int g2tsp_power(bool onoff)
 {
 
 	int ret = 0;
@@ -4539,28 +4548,6 @@ static int g2tsp_power(int onoff)
 		}
 	}
 
-	if (onoff) {
-		ret = regulator_enable(reg_lvs6);
-		if (ret) {
-			pr_err("%s: enable lvs6 failed, rc=%d\n",
-				__func__, ret);
-			return -1;
-		}
-		pr_info("%s: tsp 1.8V on is finished.\n", __func__);
-	} else {
-		if (regulator_is_enabled(reg_lvs6))
-			ret = regulator_disable(reg_lvs6);
-		else
-			printk(KERN_ERR
-				"%s: rugulator LVS6(1.8V) is disabled\n",
-					__func__);
-		if (ret) {
-			pr_err("%s: enable lvs6 failed, rc=%d\n",
-				__func__, ret);
-			return -1;
-		}
-		pr_info("%s: tsp 1.8V off is finished.\n", __func__);
-	}
 
 	if (!reg_l31) {
 		reg_l31 = regulator_get(NULL, "8917_l31");
@@ -4575,9 +4562,17 @@ static int g2tsp_power(int onoff)
 				__func__);
 			return -1;
 		}
-	}
+	}	
 
 	if (onoff) {
+		ret = regulator_enable(reg_lvs6);
+		if (ret) {
+			pr_err("%s: enable lvs6 failed, rc=%d\n",
+				__func__, ret);
+			return -1;
+		}
+		pr_info("%s: tsp 1.8V on is finished.\n", __func__);
+
 		ret = regulator_enable(reg_l31);
 		if (ret) {
 			pr_err("%s: enable l31 failed, rc=%d\n",
@@ -4586,6 +4581,7 @@ static int g2tsp_power(int onoff)
 		}
 		pr_info("%s: tsp 3.3V on is finished.\n", __func__);
 	} else {
+
 		if (regulator_is_enabled(reg_l31))
 			ret = regulator_disable(reg_l31);
 		else
@@ -4598,10 +4594,36 @@ static int g2tsp_power(int onoff)
 			return -1;
 		}
 		pr_info("%s: tsp 3.3V off is finished.\n", __func__);
+
+	
+		if (regulator_is_enabled(reg_lvs6))
+			ret = regulator_disable(reg_lvs6);
+		else
+			printk(KERN_ERR
+				"%s: rugulator LVS6(1.8V) is disabled\n",
+					__func__);
+		if (ret) {
+			pr_err("%s: enable lvs6 failed, rc=%d\n",
+				__func__, ret);
+			return -1;
+		}
+		pr_info("%s: tsp 1.8V off is finished.\n", __func__);
 	}
-	msleep(30);
+
+	msleep(300);
 
 	return 0;
+}
+
+static int g2tsp_reset(void)
+{
+	g2tsp_power(false);
+	mdelay(10);
+	g2tsp_power(true);
+	mdelay(100);		// need calibration time.
+	
+	return 0;
+	
 }
 
 static struct g2tsp_keys_button g2tsp_keys_table[] = {
@@ -4633,14 +4655,15 @@ static struct g2tsp_platform_data g2_i2c_tsp_platform_data = {
 	.mt_sync = input_mt_sync,
 	.res_x = 480,
 	.res_y = 800,
-	.options = /* G2_XREV | */ G2_YREV,
+	.options = /* G2_XREV | */ G2_YREV | G2_FWDOWN ,
 	//.name = "g2tsp-i2c",
 	.name = "odroida4-ts",	/* input drv name */
 	.irq_gpio = G2TSP_GPIO_IRQ,
-	.irqmode = IRQF_TRIGGER_FALLING,
+	.irq_mode = IRQ_MODE_NORMAL,   /* IRQ_MODE_THREAD, IRQ_MODE_NORMAL, IRQ_MODE_POLLING */
+	.irq_flag = IRQF_TRIGGER_FALLING | IRQF_ONESHOT,
 
-	.fw_version[0] = 0x060000,
-	.fw_version[1] = 0x000001,
+	.fw_version[0] = 0x020001,  // 02.00.01
+	.fw_version[1] = 0x010102,  // 1.00.11
 };
 
 
@@ -4652,7 +4675,7 @@ static struct g2tsp_platform_data g2_i2c_tsp_platform_data = {
 
 static struct i2c_board_info __initdata i2c_devs2[]  = {
 			{
-				I2C_BOARD_INFO("g2tsp", (0x80>>1)),
+				I2C_BOARD_INFO("g2tsp_i2c_adapter", (0x80>>1)),
 				.platform_data = &g2_i2c_tsp_platform_data,
 			},
 };

@@ -41,6 +41,7 @@ struct mutex dsi_tx_mutex;
 
 #if defined(CONFIG_RUNTIME_MIPI_CLK_CHANGE)
 static int current_fps;
+static int goal_fps = 0;
 #endif
 
 #ifdef USE_READ_ID
@@ -493,9 +494,6 @@ static int mipi_samsung_disp_on(struct platform_device *pdev)
 	msd.mpd->rst_brightness = true;
 	mipi_samsung_disp_backlight(mfd);
 
-#if defined(CONFIG_RUNTIME_MIPI_CLK_CHANGE)
-	current_fps = mfd->panel_info.mipi.frame_rate;
-#endif
 	pr_info("%s - [%d], id=0x%x\n", __func__, msd.mpd->lcd_no, msd.mpd->manufacture_id);
 
 	return 0;
@@ -510,6 +508,11 @@ static int mipi_samsung_disp_off(struct platform_device *pdev)
 		return -ENODEV;
 	if (unlikely(mfd->key != MFD_KEY))
 		return -EINVAL;
+
+	if(mfd->resume_state == MIPI_SUSPEND_STATE) {
+		pr_info( "%s : already MIPI_SUSPEND_STATE. return\n", __func__ );
+		return 0;
+	}
 
 	mfd->resume_state = MIPI_SUSPEND_STATE;	/* it need to be set before PANEL_OFF cmd. read mipi_samsung_disp_send_cmd() */
 	mipi_samsung_disp_send_cmd(mfd, PANEL_OFF, false);
@@ -893,6 +896,19 @@ static ssize_t mipi_samsung_auto_brightness_store(struct device *dev,
 }
 
 #if defined(CONFIG_RUNTIME_MIPI_CLK_CHANGE)
+void mipi_dsi_configure_dividers(int fps);
+int mipi_AMS367AV_dynamic_fps_folder(int is_folder_action, struct msm_panel_info *pinfo)
+{
+	if (!is_folder_action || goal_fps == 0)
+		goal_fps = pinfo->mipi.frame_rate;
+
+	current_fps = goal_fps;
+	mipi_dsi_configure_dividers(current_fps);
+
+	pr_info("%s : fps=%d, folder=%d", __func__, current_fps, is_folder_action);
+	return 0;
+}
+
 static ssize_t mipi_samsung_fps_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
@@ -907,7 +923,6 @@ static ssize_t mipi_samsung_fps_store(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t size)
 {
 	struct msm_fb_data_type *mfd;
-	int goal_fps;
 	int level = atoi(buf);
 
 	mfd = platform_get_drvdata(msd.msm_pdev);
@@ -917,13 +932,14 @@ static ssize_t mipi_samsung_fps_store(struct device *dev,
 		return size;
 	}
 
-	if (level == 0)
-		goal_fps = 60;
-	else if (level == 1)
-		goal_fps = 42;
-	else if (level == 2)
-		goal_fps = 51;
-	else {
+	/* tuning history.
+	* goal_fps cannot be lower than 43, because mdp UNDERRUN - 2013.4.30
+	*/
+	switch( level ) {
+	case 0 : goal_fps = 60;	break;
+	case 1 : goal_fps = 43;	break;
+	case 2 : goal_fps = 51;	break;
+	default:
 		pr_info("%s fps set error : invalid level %d", __func__, level);
 		return size;
 	}
@@ -1071,6 +1087,7 @@ static char char_to_dec(char data1, char data2)
 
 	return dec;
 }
+
 static void sending_tune_cmd(char *src, int len)
 {
 	struct msm_fb_data_type *mfd;

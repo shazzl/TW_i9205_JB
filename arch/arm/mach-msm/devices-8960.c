@@ -2657,7 +2657,7 @@ struct msm_dai_auxpcm_pdata auxpcm_pdata = {
 		.quant = AFE_PCM_CFG_QUANT_LINEAR_NOPAD,
 		.slot = 0,
 		.data = AFE_PCM_CFG_CDATAOE_MASTER,
-		.pcm_clk_rate = 2048000, //512000,
+		.pcm_clk_rate = 4096000, //512000,
 	}
 };
 #elif defined(CONFIG_AUXPCM_INTERFACE)

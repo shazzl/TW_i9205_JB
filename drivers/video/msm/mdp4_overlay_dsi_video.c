@@ -373,6 +373,7 @@ void mdp4_dsi_video_wait4vsync(int cndx)
 	struct vsycn_ctrl *vctrl;
 	struct mdp4_overlay_pipe *pipe;
 	unsigned long flags;
+	int ret;
 
 	if (cndx >= MAX_CONTROLLER) {
 		pr_err("%s: out or range: cndx=%d\n", __func__, cndx);
@@ -393,8 +394,12 @@ void mdp4_dsi_video_wait4vsync(int cndx)
 
 	vctrl->wait_vsync_cnt++;
 	spin_unlock_irqrestore(&vctrl->spin_lock, flags);
+	/* double the timeout in vsync time stamp generation */
+	ret = wait_for_completion_interruptible_timeout(&vctrl->vsync_comp,
+		msecs_to_jiffies(VSYNC_PERIOD * 8));
+	if (ret <= 0)
+		pr_err("%s timeout ret=%d", __func__, ret);
 
-	wait_for_completion(&vctrl->vsync_comp);
 	mdp4_video_vsync_irq_ctrl(cndx, 0);
 	
 	mdp4_stat.wait4vsync0++;
@@ -591,7 +596,8 @@ static void mdp4_dsi_video_tg_off(struct vsycn_ctrl *vctrl)
 	MDP_OUTP(MDP_BASE + DSI_VIDEO_BASE, 0); /* turn off timing generator */
 	spin_unlock_irqrestore(&vctrl->spin_lock, flags);
 
-	mdp4_dsi_video_wait4vsync(0);
+	/* some delay after turning off the tg */
+	msleep(20);
 }
 
 int mdp4_dsi_video_splash_done(void)
@@ -890,7 +896,9 @@ int mdp4_dsi_video_off(struct platform_device *pdev)
 	mdp_histogram_ctrl_all(FALSE);
 /* QC Patch for LCD black out Issue */
 	MDP_OUTP(MDP_BASE + DSI_VIDEO_BASE, 0);
-	
+	printk(KERN_EMERG "Before Sleep in mdp4_dsi_video_off \n");
+	msleep(20);
+	printk(KERN_EMERG "After  Sleep  in mdp4_dsi_video_off \n");
 	dsi_video_enabled = 0;
 
 	undx =  vctrl->update_ndx;

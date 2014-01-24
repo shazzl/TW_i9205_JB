@@ -317,6 +317,7 @@ uint16_t macro_dac1; 	/*Macro Mechnical Stop*/
 uint16_t macro_dac2; 	/*Macro Mechnical Stop*/		
 /*End : shchang@qti.qualcomm.com - 20130308 */
 
+uint16_t cal_offset; 	/*SEMCO request by Lizk 05112013*/	
 
 /* based on F-Rom definition*/
 struct sFRom_af {
@@ -327,6 +328,9 @@ struct sFRom_af {
 	uint32_t position;
 #if defined(CONFIG_MACH_KS02)
 	uint32_t pid;/* Randy PID*/
+#else /* for Melius and Serrano */
+	uint32_t panoffest;/* SEMCO request by Lizk 05112013*/
+	uint32_t caloffset;/* SEMCO request by Lizk 05112013*/
 #endif
 };
 struct sFRom_wb {
@@ -441,6 +445,16 @@ static void imx175_format_afdata(void)
 	}
 	CDBG("%s: PID (0x%x)\n", __func__, imx175_af_data.pid_dac);
 #endif /* Randy PID */
+#else /* for Melius and Serrano */
+
+	if((uint16_t)ftov_BEn(af->caloffset) == 0x0000 || (uint16_t)ftov_BEn(af->caloffset) == 0xFFFF)
+	{
+		imx175_af_data.cal_offset_dac  = cal_offset = 0;		/* SEMCO request by Lizk*/			
+	}
+	else
+	{
+		imx175_af_data.cal_offset_dac  = cal_offset = (uint16_t)ftov_BEn(af->caloffset);		/* SEMCO request by Lizk*/			
+	}
 #endif
 	/*pr_err("[shchang:CAL4-1] af->Pan_position = 0x%x,
 	imx175_af_data.start_dac = %d\n",

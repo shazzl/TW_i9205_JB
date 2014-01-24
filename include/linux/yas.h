@@ -213,7 +213,7 @@ struct yas_mag_calibration_callback {
 };
 
 #define YAS_MAGCALIB_MODE_SPHERE        (1)
-#define YAS_MAGCALIB_MODE_ELLIPSOID     (1)
+#define YAS_MAGCALIB_MODE_ELLIPSOID     (0)
 
 struct yas_mag_calibration {
 	int (*init) (void);
