@@ -152,7 +152,3 @@ obj-$(CONFIG_SENSORS_SSP)		+= sensorhub/
 obj-$(CONFIG_SEC_FPGA)	+= barcode_emul/
 
 obj-$(CONFIG_AUTHENTEC_VPNCLIENT_INTERCEPTOR) += interceptor/
-
-ifeq (1, $(shell if [ -d ../../../../../../kernel/drivers/exfat ] ; then echo 1 ; fi))
-obj-y                           += exfat/
-endif
